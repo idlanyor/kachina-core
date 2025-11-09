@@ -52,7 +52,6 @@ export class Client extends EventEmitter {
                 keys: makeCacheableSignalKeyStore(state.keys, this.config.logger)
             },
             logger: this.config.logger,
-            printQRInTerminal: this.config.printQRInTerminal && this.config.loginMethod === 'qr',
             browser: this.config.browser,
             getMessage: async (key) => {
                 if (this.store) {
