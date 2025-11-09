@@ -51,7 +51,13 @@ export class Client extends EventEmitter {
     sendReact(jid: string, messageKey: any, emoji: string): Promise<any>;
 
     // View once methods
-    readViewOnce(quotedMessage: any): Promise<{ buffer: Buffer, type: 'image' | 'video', caption: string }>;
+    readViewOnce(quotedMessage: any): Promise<{
+        buffer: Buffer;
+        type: 'image' | 'video' | 'audio';
+        caption: string;
+        mimetype?: string;
+        ptt?: boolean;
+    }>;
     sendViewOnce(jid: string, quotedMessage: any, options?: any): Promise<any>;
 
     // Group methods

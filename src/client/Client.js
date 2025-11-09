@@ -676,7 +676,8 @@ export class Client extends EventEmitter {
     async sendViewOnce(jid, quotedMessage, options = {}) {
         try {
             // Read the view once message
-            const { buffer, type, caption } = await this.readViewOnce(quotedMessage);
+            const result = await this.readViewOnce(quotedMessage);
+            const { buffer, type, caption, mimetype, ptt } = result;
 
             // Send based on type
             if (type === 'image') {
@@ -684,11 +685,19 @@ export class Client extends EventEmitter {
                     jpegThumbnail: null,
                     ...options
                 });
-            } else {
+            } else if (type === 'video') {
                 return await this.sendVideo(jid, buffer, caption, {
                     jpegThumbnail: null,
                     ...options
                 });
+            } else if (type === 'audio') {
+                return await this.sendAudio(jid, buffer, {
+                    mimetype: mimetype || 'audio/mpeg',
+                    ptt: ptt || false,
+                    ...options
+                });
+            } else {
+                throw new Error(`Unsupported view once media type: ${type}`);
             }
         } catch (error) {
             throw new Error(`Failed to send view once: ${error.message}`);
