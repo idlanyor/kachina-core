@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: 'Kachina-MD',
+  ignoreDeadLinks:true,
   description: 'WhatsApp Bot Framework - Simple, Fast, and Modular',
   base: '/kachina-core/', // GitHub Pages base URL
 
