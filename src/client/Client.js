@@ -468,10 +468,91 @@ export class Client extends EventEmitter {
     }
 
     /**
+     * Helper function to unwrap view once message from various structures
+     * @private
+     * @param {Object} quotedMessage - The quoted message object
+     * @returns {Object|null} Unwrapped message or null if not view once
+     */
+    _unwrapViewOnceMessage(quotedMessage) {
+        const quotedMsg = quotedMessage?.message;
+        const quotedRaw = quotedMessage?.raw?.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+
+        let innerMsg = null;
+        let isViewOnce = false;
+
+        // Helper to extract from wrapper
+        const extractFromWrapper = (wrapper) => {
+            if (wrapper?.viewOnceMessageV2?.message) {
+                return { msg: wrapper.viewOnceMessageV2.message, isVO: true };
+            }
+            if (wrapper?.viewOnceMessageV2Extension?.message) {
+                return { msg: wrapper.viewOnceMessageV2Extension.message, isVO: true };
+            }
+            if (wrapper?.viewOnceMessage?.message) {
+                return { msg: wrapper.viewOnceMessage.message, isVO: true };
+            }
+            return null;
+        };
+
+        // Try multiple paths to find view once message
+        // Path 1: Direct from quotedRaw
+        if (quotedRaw) {
+            const extracted = extractFromWrapper(quotedRaw);
+            if (extracted) {
+                innerMsg = extracted.msg;
+                isViewOnce = extracted.isVO;
+            } else if (quotedRaw.ephemeralMessage?.message) {
+                const ephExtracted = extractFromWrapper(quotedRaw.ephemeralMessage.message);
+                if (ephExtracted) {
+                    innerMsg = ephExtracted.msg;
+                    isViewOnce = ephExtracted.isVO;
+                }
+            }
+        }
+
+        // Path 2: From quotedMsg
+        if (!innerMsg && quotedMsg) {
+            const extracted = extractFromWrapper(quotedMsg);
+            if (extracted) {
+                innerMsg = extracted.msg;
+                isViewOnce = extracted.isVO;
+            } else if (quotedMsg.ephemeralMessage?.message) {
+                const ephExtracted = extractFromWrapper(quotedMsg.ephemeralMessage.message);
+                if (ephExtracted) {
+                    innerMsg = ephExtracted.msg;
+                    isViewOnce = ephExtracted.isVO;
+                }
+            }
+        }
+
+        // Path 3: Already unwrapped (has viewOnce flag)
+        if (!innerMsg && quotedMsg) {
+            if (quotedMsg.imageMessage?.viewOnce ||
+                quotedMsg.videoMessage?.viewOnce ||
+                quotedMsg.audioMessage?.viewOnce) {
+                innerMsg = quotedMsg;
+                isViewOnce = true;
+            }
+        }
+
+        // Path 4: Check raw message directly
+        if (!innerMsg && quotedRaw) {
+            if (quotedRaw.imageMessage?.viewOnce ||
+                quotedRaw.videoMessage?.viewOnce ||
+                quotedRaw.audioMessage?.viewOnce) {
+                innerMsg = quotedRaw;
+                isViewOnce = true;
+            }
+        }
+
+        return isViewOnce ? innerMsg : null;
+    }
+
+    /**
      * Read and download view once message
      * @async
      * @param {Object} quotedMessage - The quoted message object (m.quoted)
-     * @returns {Promise<{buffer: Buffer, type: 'image'|'video', caption: string}>} Object containing media buffer, type, and caption
+     * @returns {Promise<{buffer: Buffer, type: 'image'|'video'|'audio', caption: string, mimetype?: string, ptt?: boolean}>} Object containing media buffer, type, and caption
      * @throws {Error} If quoted message is not provided or not a view once message
      * @example
      * const { buffer, type, caption } = await client.readViewOnce(m.quoted);
@@ -484,29 +565,100 @@ export class Client extends EventEmitter {
             throw new Error('Quoted message is required');
         }
 
-        // Get view once message
-        const ViewOnceImg = quotedMessage?.message?.imageMessage;
-        const ViewOnceVid = quotedMessage?.message?.videoMessage;
+        // Try to unwrap view once message
+        const innerMsg = this._unwrapViewOnceMessage(quotedMessage);
 
-        // Check if it's a view once message
-        if (!ViewOnceImg?.viewOnce && !ViewOnceVid?.viewOnce) {
-            throw new Error('Message is not a view once message');
+        if (!innerMsg) {
+            throw new Error('Message is not a view once message or has already been opened');
         }
 
-        // Download the media
-        const buffer = await downloadMediaMessage(
-            quotedMessage,
-            'buffer',
-            {},
-            { logger: this.config.logger }
-        );
+        // Extract media messages
+        const ViewOnceImg = innerMsg.imageMessage;
+        const ViewOnceVid = innerMsg.videoMessage;
+        const ViewOnceAud = innerMsg.audioMessage;
+
+        // Get the media message
+        const mediaMsg = ViewOnceImg || ViewOnceVid || ViewOnceAud;
+
+        if (!mediaMsg) {
+            throw new Error('No media found in view once message');
+        }
+
+        // Check if media key exists (if not, it's expired/opened)
+        if (!mediaMsg.mediaKey || mediaMsg.mediaKey.length === 0) {
+            throw new Error('View once message has been opened or expired. Reply to view once BEFORE it is opened.');
+        }
+
+        // Download the media with multiple fallback methods
+        let buffer = null;
+        const errors = [];
+
+        // Method 1: Try using quotedMessage.download() if available
+        if (typeof quotedMessage.download === 'function') {
+            try {
+                buffer = await quotedMessage.download();
+                this.config.logger?.debug('Downloaded view once using m.quoted.download()');
+            } catch (err) {
+                errors.push(`Method 1 (m.quoted.download): ${err.message}`);
+                this.config.logger?.debug('Download via m.quoted.download failed:', err.message);
+            }
+        }
+
+        // Method 2: Try downloadMediaMessage with innerMsg
+        if (!buffer) {
+            try {
+                buffer = await downloadMediaMessage(
+                    { message: innerMsg, key: quotedMessage.key },
+                    'buffer',
+                    {},
+                    { logger: this.config.logger }
+                );
+                this.config.logger?.debug('Downloaded view once using downloadMediaMessage with innerMsg');
+            } catch (err) {
+                errors.push(`Method 2 (downloadMediaMessage with innerMsg): ${err.message}`);
+                this.config.logger?.debug('Download via downloadMediaMessage (innerMsg) failed:', err.message);
+            }
+        }
+
+        // Method 3: Try downloadMediaMessage with original quotedMessage
+        if (!buffer) {
+            try {
+                buffer = await downloadMediaMessage(
+                    quotedMessage,
+                    'buffer',
+                    {},
+                    { logger: this.config.logger }
+                );
+                this.config.logger?.debug('Downloaded view once using downloadMediaMessage with quotedMessage');
+            } catch (err) {
+                errors.push(`Method 3 (downloadMediaMessage with quotedMessage): ${err.message}`);
+                this.config.logger?.debug('Download via downloadMediaMessage (quotedMessage) failed:', err.message);
+            }
+        }
+
+        if (!buffer) {
+            const errorMsg = `Failed to download view once media. Tried ${errors.length} methods:\n${errors.join('\n')}`;
+            this.config.logger?.error(errorMsg);
+            throw new Error(errorMsg);
+        }
 
         // Return buffer with type and caption
-        return {
+        const result = {
             buffer,
-            type: ViewOnceImg ? 'image' : 'video',
-            caption: ViewOnceImg?.caption || ViewOnceVid?.caption || ''
+            caption: ViewOnceImg?.caption || ViewOnceVid?.caption || ViewOnceAud?.caption || ''
         };
+
+        if (ViewOnceImg) {
+            result.type = 'image';
+        } else if (ViewOnceVid) {
+            result.type = 'video';
+        } else if (ViewOnceAud) {
+            result.type = 'audio';
+            result.mimetype = ViewOnceAud.mimetype || 'audio/mpeg';
+            result.ptt = !!ViewOnceAud.ptt;
+        }
+
+        return result;
     }
 
     /**
