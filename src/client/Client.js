@@ -12,10 +12,6 @@ import { serialize } from '../helpers/serialize.js';
 import { PluginHandler } from '../handlers/PluginHandler.js';
 import {
     createSticker,
-    createFullSticker,
-    createCroppedSticker,
-    createCircleSticker,
-    createRoundedSticker,
     StickerTypes
 } from '../helpers/sticker.js';
 
@@ -67,6 +63,43 @@ export class Client extends EventEmitter {
         }
 
         this.sock.ev.on('creds.update', saveCreds);
+
+        // Handle pairing code request (must be before connection)
+        if (this.config.loginMethod === 'pairing' && !state.creds.registered) {
+            if (!this.config.phoneNumber) {
+                throw new Error('Phone number is required for pairing method. Example: { phoneNumber: "628123456789" }');
+            }
+
+            // Format phone number (remove + and spaces)
+            const phoneNumber = this.config.phoneNumber.replace(/[^0-9]/g, '');
+
+            if (phoneNumber.length < 10) {
+                throw new Error('Invalid phone number format. Use country code without +. Example: 628123456789');
+            }
+
+            // Request pairing code after socket is initialized
+            setTimeout(async () => {
+                try {
+                    const code = await this.sock.requestPairingCode(phoneNumber);
+                    this.emit('pairing.code', code);
+
+                    // Log to console with formatting
+                    console.log('\n┌─────────────────────────────────────┐');
+                    console.log('│     WhatsApp Pairing Code           │');
+                    console.log('├─────────────────────────────────────┤');
+                    console.log(`│         Code: ${code}                │`);
+                    console.log('└─────────────────────────────────────┘');
+                    console.log('\nSteps to pair:');
+                    console.log('1. Open WhatsApp on your phone');
+                    console.log('2. Go to Settings > Linked Devices');
+                    console.log('3. Tap "Link a Device"');
+                    console.log('4. Enter the code above\n');
+                } catch (error) {
+                    this.emit('pairing.error', error);
+                    console.error('Failed to request pairing code:', error.message);
+                }
+            }, 3000);
+        }
 
         this.sock.ev.on('connection.update', async (update) => {
             await this.handleConnectionUpdate(update);
@@ -124,17 +157,15 @@ export class Client extends EventEmitter {
             this.user = this.sock.user;
             this.emit('ready', this.user);
 
-            // Request pairing code if needed
-            if (!this.sock.authState.creds.registered && this.config.loginMethod === 'pairing') {
-                if (this.config.phoneNumber) {
-                    setTimeout(async () => {
-                        const code = await this.sock.requestPairingCode(this.config.phoneNumber);
-                        this.emit('pairing.code', code);
-                    }, 3000);
-                }
+            // Log success message
+            if (this.config.loginMethod === 'pairing') {
+                console.log('\n✓ Successfully connected via pairing code!\n');
             }
         } else if (connection === 'connecting') {
             this.emit('connecting');
+            if (this.config.loginMethod === 'pairing') {
+                console.log('Waiting for pairing code confirmation...');
+            }
         }
     }
 
