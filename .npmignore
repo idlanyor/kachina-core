@@ -1,0 +1,10 @@
+src/
+examples/
+node_modules/
+*.session/
+database/
+.git/
+.gitignore
+.DS_Store
+*.log
+build.js

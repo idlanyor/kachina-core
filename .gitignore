@@ -1,0 +1,11 @@
+node_modules/
+lib/
+*.log
+.DS_Store
+*.session/
+kachina-session/
+database/
+examples/database/
+examples/*-session/
+test-session/
+.env

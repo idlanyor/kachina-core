@@ -1,0 +1,67 @@
+{
+  "name": "@roidev/kachina-md",
+  "version": "1.0.1",
+  "description": "WhatsApp Bot Framework - Simple, Fast, and Modular",
+  "main": "lib/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node examples/basic-bot.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "baileys",
+    "wa-bot",
+    "whatsapp-bot",
+    "framework",
+    "kachina"
+  ],
+  "author": "Roynaldi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/idlanyor/kachina-core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/idlanyor/kachina-core/issues"
+  },
+  "homepage": "https://github.com/idlanyor/kachina-core#readme",
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "axios": "^1.6.0",
+    "baileys": "npm:@whiskeysockets/baileys@latest",
+    "chalk": "^5.3.0",
+    "file-type": "^18.7.0",
+    "fs-extra": "^11.2.0",
+    "lowdb": "^7.0.1",
+    "node-cache": "^5.1.2",
+    "pino": "^8.16.0",
+    "qrcode-terminal": "^0.12.0",
+    "sharp": "^0.33.0",
+    "wa-sticker-formatter": "^4.4.4"
+  },
+  "devDependencies": {
+    "gradient-string": "^2.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/index.js"
+    },
+    "./plugins": {
+      "import": "./lib/plugins/index.js"
+    },
+    "./helpers": {
+      "import": "./lib/helpers/index.js"
+    }
+  },
+  "files": [
+    "lib/**/*",
+    "README.md",
+    "LICENSE"
+  ]
+}
