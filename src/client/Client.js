@@ -1,7 +1,6 @@
 import makeWASocket, {
     DisconnectReason,
     useMultiFileAuthState,
-    makeInMemoryStore,
     makeCacheableSignalKeyStore,
     fetchLatestBaileysVersion
 } from 'baileys';
@@ -11,8 +10,18 @@ import qrcode from 'qrcode-terminal';
 import EventEmitter from 'events';
 import { serialize } from '../helpers/serialize.js';
 import { PluginHandler } from '../handlers/PluginHandler.js';
+import {
+    createSticker,
+    createFullSticker,
+    createCroppedSticker,
+    createCircleSticker,
+    createRoundedSticker,
+    StickerTypes
+} from '../helpers/sticker.js';
 
 export class Client extends EventEmitter {
+    static StickerTypes = StickerTypes;
+
     constructor(options = {}) {
         super();
 
@@ -36,11 +45,6 @@ export class Client extends EventEmitter {
         const { state, saveCreds } = await useMultiFileAuthState(this.config.sessionId);
         const { version } = await fetchLatestBaileysVersion();
 
-        if (this.config.useStore) {
-            this.store = makeInMemoryStore({
-                logger: pino().child({ level: 'silent', stream: 'store' })
-            });
-        }
 
         this.sock = makeWASocket({
             version,
@@ -182,9 +186,11 @@ export class Client extends EventEmitter {
         });
     }
 
+
     async sendSticker(jid, buffer, options = {}) {
+        const stickerBuffer = await createSticker(buffer, options);
         return await this.sendMessage(jid, {
-            sticker: buffer,
+            sticker: stickerBuffer,
             ...options
         });
     }
