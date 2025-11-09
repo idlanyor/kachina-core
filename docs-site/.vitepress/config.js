@@ -4,7 +4,7 @@ export default defineConfig({
   title: 'Kachina-MD',
   ignoreDeadLinks:true,
   description: 'WhatsApp Bot Framework - Simple, Fast, and Modular',
-  base: '/kachina-core/', // GitHub Pages base URL
+  base: '/', // GitHub Pages base URL
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
