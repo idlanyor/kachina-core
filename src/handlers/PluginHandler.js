@@ -2,7 +2,42 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+/**
+ * @typedef {Object} Plugin
+ * @property {string} name - Plugin name
+ * @property {Array<string>} commands - Command aliases
+ * @property {string} [category] - Plugin category
+ * @property {string} [description] - Plugin description
+ * @property {boolean} [owner=false] - Owner only command
+ * @property {boolean} [group=false] - Group only command
+ * @property {boolean} [private=false] - Private chat only command
+ * @property {boolean} [admin=false] - Admin only command
+ * @property {boolean} [botAdmin=false] - Requires bot to be admin
+ * @property {Function} exec - Plugin execution function
+ */
+
+/**
+ * @typedef {Object} PluginContext
+ * @property {import('../client/Client.js').Client} client - Bot client instance
+ * @property {Object} m - Serialized message object
+ * @property {Array<string>} args - Command arguments
+ * @property {string} command - Command name that was used
+ * @property {string} prefix - Command prefix
+ * @property {Object} sock - Raw WhatsApp socket
+ */
+
+/**
+ * Plugin handler for loading and executing bot plugins
+ * @class PluginHandler
+ * @example
+ * const handler = new PluginHandler(client);
+ * await handler.loadAll('./plugins');
+ */
 export class PluginHandler {
+    /**
+     * Creates a new PluginHandler instance
+     * @param {import('../client/Client.js').Client} client - Bot client instance
+     */
     constructor(client) {
         this.client = client;
         this.plugins = new Map();
@@ -10,6 +45,18 @@ export class PluginHandler {
         this.isLoaded = false;
     }
 
+    /**
+     * Load a single plugin from file path
+     * @async
+     * @param {string} pluginPath - Absolute path to plugin file
+     * @returns {Promise<Plugin|null>} Loaded plugin object or null if failed
+     * @throws {Error} If plugin is invalid
+     * @example
+     * const plugin = await handler.load('/path/to/plugin.js');
+     * if (plugin) {
+     *   console.log('Loaded:', plugin.name);
+     * }
+     */
     async load(pluginPath) {
         try {
             const module = await import(`file://${pluginPath}?update=${Date.now()}`);
@@ -55,6 +102,15 @@ export class PluginHandler {
         }
     }
 
+    /**
+     * Load all plugins from a directory recursively
+     * @async
+     * @param {string} directory - Path to plugins directory
+     * @returns {Promise<number>} Number of successfully loaded plugins
+     * @example
+     * const count = await handler.loadAll('./plugins');
+     * console.log(`Loaded ${count} plugins`);
+     */
     async loadAll(directory) {
         if (!fs.existsSync(directory)) {
             console.warn(`Plugin directory not found: ${directory}`);
@@ -75,6 +131,13 @@ export class PluginHandler {
         return loaded;
     }
 
+    /**
+     * Find all files with specific extension in directory recursively
+     * @private
+     * @param {string} dir - Directory to search
+     * @param {string} ext - File extension (e.g., '.js')
+     * @returns {Array<string>} Array of absolute file paths
+     */
     findFiles(dir, ext) {
         let results = [];
         const list = fs.readdirSync(dir);
@@ -93,6 +156,17 @@ export class PluginHandler {
         return results;
     }
 
+    /**
+     * Execute plugin command from message
+     * @async
+     * @param {Object} m - Serialized message object
+     * @returns {Promise<void>}
+     * @example
+     * // This is automatically called by Client when message starts with prefix
+     * client.on('message', async (m) => {
+     *   await handler.execute(m);
+     * });
+     */
     async execute(m) {
         if (!m.body) return;
 
@@ -158,6 +232,15 @@ export class PluginHandler {
         }
     }
 
+    /**
+     * Check if user is bot owner
+     * @param {string} jid - User JID to check
+     * @returns {boolean} True if user is owner
+     * @example
+     * if (handler.isOwner(m.sender)) {
+     *   // Owner-only logic
+     * }
+     */
     isOwner(jid) {
         const owners = this.client.config.owners || this.client.config.owner || [];
         const ownerList = Array.isArray(owners) ? owners : [owners];
@@ -165,6 +248,16 @@ export class PluginHandler {
         return ownerList.includes(number) || ownerList.includes(jid);
     }
 
+    /**
+     * Reload/unload a plugin by name
+     * @param {string} pluginName - Name of plugin to reload
+     * @returns {boolean} True if plugin was found and reloaded
+     * @example
+     * if (handler.reload('ping')) {
+     *   await handler.load('./plugins/ping.js');
+     *   console.log('Plugin reloaded');
+     * }
+     */
     reload(pluginName) {
         const plugin = this.plugins.get(pluginName);
         if (!plugin) return false;
@@ -178,10 +271,27 @@ export class PluginHandler {
         return true;
     }
 
+    /**
+     * Get list of all loaded plugins
+     * @returns {Array<Plugin>} Array of plugin objects
+     * @example
+     * const plugins = handler.list();
+     * plugins.forEach(p => console.log(p.name));
+     */
     list() {
         return Array.from(this.plugins.values());
     }
 
+    /**
+     * Get a specific plugin by name
+     * @param {string} name - Plugin name
+     * @returns {Plugin|undefined} Plugin object or undefined if not found
+     * @example
+     * const pingPlugin = handler.get('ping');
+     * if (pingPlugin) {
+     *   console.log('Commands:', pingPlugin.commands);
+     * }
+     */
     get(name) {
         return this.plugins.get(name);
     }

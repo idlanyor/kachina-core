@@ -1,6 +1,43 @@
 import { downloadMediaMessage, getContentType } from 'baileys';
 import { fileTypeFromBuffer } from 'file-type';
 
+/**
+ * @typedef {Object} SerializedMessage
+ * @property {Object} key - Message key
+ * @property {string} chat - Chat JID (remoteJid)
+ * @property {boolean} fromMe - Whether message is from bot
+ * @property {string} id - Message ID
+ * @property {boolean} isGroup - Whether chat is a group
+ * @property {string} sender - Sender JID
+ * @property {string} pushName - Sender push name
+ * @property {string} type - Message type (e.g., 'conversation', 'imageMessage')
+ * @property {Object} message - Raw message object
+ * @property {string} body - Message text content
+ * @property {SerializedMessage} [quoted] - Quoted/replied message
+ * @property {string} caption - Media caption
+ * @property {string} mimetype - Media mime type
+ * @property {number} fileSize - Media file size
+ * @property {Array<string>} mentions - Mentioned JIDs
+ * @property {Function} reply - Reply to message
+ * @property {Function} react - React to message with emoji
+ * @property {Function} download - Download media from message
+ * @property {Function} delete - Delete message
+ * @property {Function} forward - Forward message
+ * @property {Function} copyNForward - Copy and forward message
+ */
+
+/**
+ * Serialize raw Baileys message into standardized format with helper methods
+ * @async
+ * @param {Object} msg - Raw Baileys message object
+ * @param {Object} sock - WhatsApp socket instance
+ * @returns {Promise<SerializedMessage>} Serialized message object
+ * @example
+ * const m = await serialize(rawMessage, sock);
+ * console.log(m.body); // Message text
+ * await m.reply('Hello!'); // Reply to message
+ * await m.react('👍'); // React with emoji
+ */
 export async function serialize(msg, sock) {
     if (!msg) return msg;
 
@@ -86,6 +123,12 @@ export async function serialize(msg, sock) {
     return m;
 }
 
+/**
+ * Extract text body from various message types
+ * @private
+ * @param {Object} message - Message object
+ * @returns {string} Extracted text content
+ */
 function getBody(message) {
     if (!message) return '';
 

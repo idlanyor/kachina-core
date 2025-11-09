@@ -20,31 +20,31 @@ hero:
       link: /api/client
 
 features:
-  - icon: 🚀
+  - icon: <i class="fa-solid fa-rocket"></i>
     title: Easy to Use
     details: Simple and intuitive API designed for beginners and experts alike. Get started in minutes with just a few lines of code.
 
-  - icon: ⚡
+  - icon: <i class="fa-solid fa-bolt"></i>
     title: Lightning Fast
     details: Built on top of Baileys with optimized performance. Handle thousands of messages efficiently.
 
-  - icon: 🔌
+  - icon: <i class="fa-solid fa-plug"></i>
     title: Plugin System
     details: Extend functionality with a powerful plugin system. Create and share custom commands easily.
 
-  - icon: 🔐
+  - icon: <i class="fa-solid fa-lock"></i>
     title: Dual Authentication
     details: Support for both QR Code and Pairing Code methods. Perfect for headless servers and Docker deployments.
 
-  - icon: 📦
+  - icon: <i class="fa-solid fa-box-open"></i>
     title: Rich Features
     details: Send text, images, videos, stickers, documents, polls, and more. Full WhatsApp feature support.
 
-  - icon: 🎨
+  - icon: <i class="fa-solid fa-palette"></i>
     title: Sticker Creation
     details: Built-in sticker maker with support for multiple formats - full, cropped, circle, and rounded.
 
-  - icon: 👁️
+  - icon: <i class="fa-solid fa-eye"></i>
     title: View Once Reader
     details: Read and download view once messages. Extract media from temporary messages.
 

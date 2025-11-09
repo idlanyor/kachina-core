@@ -16,9 +16,56 @@ import {
     StickerTypes
 } from '../helpers/sticker.js';
 
+/**
+ * @typedef {Object} ClientOptions
+ * @property {string} [sessionId='kachina-session'] - Session ID for storing authentication data
+ * @property {string} [phoneNumber=''] - Phone number for pairing method (format: 628123456789)
+ * @property {'qr'|'pairing'} [loginMethod='qr'] - Login method: 'qr' for QR code, 'pairing' for pairing code
+ * @property {Array<string>} [browser=['Kachina-MD', 'Chrome', '1.0.0']] - Browser identification
+ * @property {Object} [logger] - Pino logger instance
+ * @property {string} [prefix='!'] - Command prefix for plugin system
+ * @property {Object} [store] - Optional message store for caching
+ */
+
+/**
+ * Main WhatsApp bot client class
+ *
+ * @class Client
+ * @extends EventEmitter
+ *
+ * @fires Client#ready - Emitted when bot is connected and ready
+ * @fires Client#message - Emitted when a new message is received
+ * @fires Client#group.update - Emitted when group participants are updated
+ * @fires Client#groups.update - Emitted when group info is updated
+ * @fires Client#call - Emitted when receiving a call
+ * @fires Client#pairing.code - Emitted when pairing code is generated (pairing mode only)
+ * @fires Client#pairing.error - Emitted when pairing code request fails
+ * @fires Client#reconnecting - Emitted when bot is reconnecting
+ * @fires Client#connecting - Emitted when bot is connecting
+ * @fires Client#logout - Emitted when bot is logged out
+ *
+ * @example
+ * // QR Code login
+ * const client = new Client({
+ *   sessionId: 'my-bot',
+ *   loginMethod: 'qr'
+ * });
+ *
+ * @example
+ * // Pairing code login
+ * const client = new Client({
+ *   sessionId: 'my-bot',
+ *   phoneNumber: '628123456789',
+ *   loginMethod: 'pairing'
+ * });
+ */
 export class Client extends EventEmitter {
     static StickerTypes = StickerTypes;
 
+    /**
+     * Creates a new Client instance
+     * @param {ClientOptions} [options={}] - Client configuration options
+     */
     constructor(options = {}) {
         super();
 
@@ -37,6 +84,18 @@ export class Client extends EventEmitter {
         this.pluginHandler = new PluginHandler(this);
     }
 
+    /**
+     * Start the WhatsApp bot connection
+     * Initializes the socket connection and handles authentication
+     * @async
+     * @returns {Promise<Object>} The initialized socket connection
+     * @throws {Error} If phone number is invalid (pairing mode)
+     * @example
+     * await client.start();
+     * client.on('ready', (user) => {
+     *   console.log('Bot ready:', user.id);
+     * });
+     */
     async start() {
         const { state, saveCreds } = await useMultiFileAuthState(this.config.sessionId);
         const { version } = await fetchLatestBaileysVersion();
@@ -135,6 +194,15 @@ export class Client extends EventEmitter {
         return this.sock;
     }
 
+    /**
+     * Handle connection updates from WhatsApp socket
+     * @private
+     * @async
+     * @param {Object} update - Connection update object
+     * @param {string} [update.connection] - Connection status: 'open', 'close', 'connecting'
+     * @param {Object} [update.lastDisconnect] - Last disconnect information
+     * @param {string} [update.qr] - QR code data for scanning
+     */
     async handleConnectionUpdate(update) {
         const { connection, lastDisconnect, qr } = update;
 
@@ -170,15 +238,45 @@ export class Client extends EventEmitter {
         }
     }
 
-    // Helper methods
+    /**
+     * Send a raw message to WhatsApp
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID) - format: number@s.whatsapp.net or groupId@g.us
+     * @param {Object} content - Message content object (text, image, video, etc.)
+     * @param {Object} [options={}] - Additional options for message
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendMessage('628xxx@s.whatsapp.net', { text: 'Hello' });
+     */
     async sendMessage(jid, content, options = {}) {
         return await this.sock.sendMessage(jid, content, options);
     }
 
+    /**
+     * Send a text message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {string} text - Text message content
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendText('628xxx@s.whatsapp.net', 'Hello World!');
+     */
     async sendText(jid, text, options = {}) {
         return await this.sendMessage(jid, { text }, options);
     }
 
+    /**
+     * Send an image message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {Buffer|string} buffer - Image buffer or file path/URL
+     * @param {string} [caption=''] - Image caption
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendImage('628xxx@s.whatsapp.net', imageBuffer, 'My Image');
+     */
     async sendImage(jid, buffer, caption = '', options = {}) {
         const content = {
             image: buffer,
@@ -188,6 +286,17 @@ export class Client extends EventEmitter {
         return await this.sendMessage(jid, content, options);
     }
 
+    /**
+     * Send a video message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {Buffer|string} buffer - Video buffer or file path/URL
+     * @param {string} [caption=''] - Video caption
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendVideo('628xxx@s.whatsapp.net', videoBuffer, 'My Video');
+     */
     async sendVideo(jid, buffer, caption = '', options = {}) {
         const content = {
             video: buffer,
@@ -197,6 +306,21 @@ export class Client extends EventEmitter {
         return await this.sendMessage(jid, content, options);
     }
 
+    /**
+     * Send an audio message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {Buffer|string} buffer - Audio buffer or file path/URL
+     * @param {Object} [options={}] - Additional options
+     * @param {string} [options.mimetype='audio/mp4'] - Audio mime type
+     * @param {boolean} [options.ptt=false] - Push to talk (voice note)
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * // Send as audio file
+     * await client.sendAudio('628xxx@s.whatsapp.net', audioBuffer);
+     * // Send as voice note
+     * await client.sendAudio('628xxx@s.whatsapp.net', audioBuffer, { ptt: true });
+     */
     async sendAudio(jid, buffer, options = {}) {
         const content = {
             audio: buffer,
@@ -207,6 +331,18 @@ export class Client extends EventEmitter {
         return await this.sendMessage(jid, content, options);
     }
 
+    /**
+     * Send a document message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {Buffer|string} buffer - Document buffer or file path/URL
+     * @param {string} filename - Document filename with extension
+     * @param {string} mimetype - Document mime type (e.g., 'application/pdf')
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendDocument('628xxx@s.whatsapp.net', pdfBuffer, 'file.pdf', 'application/pdf');
+     */
     async sendDocument(jid, buffer, filename, mimetype, options = {}) {
         return await this.sendMessage(jid, {
             document: buffer,
@@ -216,7 +352,22 @@ export class Client extends EventEmitter {
         });
     }
 
-
+    /**
+     * Send a sticker message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {Buffer|string} buffer - Image buffer or file path/URL to convert to sticker
+     * @param {Object} [options={}] - Sticker options
+     * @param {string} [options.pack] - Sticker pack name
+     * @param {string} [options.author] - Sticker author name
+     * @param {string} [options.type] - Sticker type from Client.StickerTypes
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendSticker('628xxx@s.whatsapp.net', imageBuffer, {
+     *   pack: 'My Stickers',
+     *   author: 'Bot'
+     * });
+     */
     async sendSticker(jid, buffer, options = {}) {
         const stickerBuffer = await createSticker(buffer, options);
         return await this.sendMessage(jid, {
@@ -225,14 +376,37 @@ export class Client extends EventEmitter {
         });
     }
 
+    /**
+     * Send contact(s) message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {Array<{displayName: string, vcard: string}>} contacts - Array of contact objects
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendContact('628xxx@s.whatsapp.net', [{
+     *   displayName: 'John Doe',
+     *   vcard: 'BEGIN:VCARD\nVERSION:3.0\nFN:John Doe\nTEL:+1234567890\nEND:VCARD'
+     * }]);
+     */
     async sendContact(jid, contacts, options = {}) {
-        // contacts = [{ displayName, vcard }]
         return await this.sendMessage(jid, {
             contacts: { contacts },
             ...options
         });
     }
 
+    /**
+     * Send location message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {number} latitude - Location latitude
+     * @param {number} longitude - Location longitude
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendLocation('628xxx@s.whatsapp.net', -6.200000, 106.816666);
+     */
     async sendLocation(jid, latitude, longitude, options = {}) {
         return await this.sendMessage(jid, {
             location: { degreesLatitude: latitude, degreesLongitude: longitude },
@@ -240,6 +414,18 @@ export class Client extends EventEmitter {
         });
     }
 
+    /**
+     * Send poll message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {string} name - Poll question
+     * @param {Array<string>} values - Poll options
+     * @param {Object} [options={}] - Additional options
+     * @param {number} [options.selectableCount=1] - Number of selectable options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendPoll('628xxx@s.whatsapp.net', 'Favorite color?', ['Red', 'Blue', 'Green']);
+     */
     async sendPoll(jid, name, values, options = {}) {
         return await this.sendMessage(jid, {
             poll: {
@@ -251,6 +437,16 @@ export class Client extends EventEmitter {
         });
     }
 
+    /**
+     * Send reaction to a message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {Object} messageKey - Message key object from the message to react to
+     * @param {string} emoji - Emoji to react with
+     * @returns {Promise<Object>} Sent reaction object
+     * @example
+     * await client.sendReact('628xxx@s.whatsapp.net', message.key, '👍');
+     */
     async sendReact(jid, messageKey, emoji) {
         return await this.sendMessage(jid, {
             react: { text: emoji, key: messageKey }
@@ -259,8 +455,15 @@ export class Client extends EventEmitter {
 
     /**
      * Read and download view once message
+     * @async
      * @param {Object} quotedMessage - The quoted message object (m.quoted)
-     * @returns {Promise<{buffer: Buffer, type: 'image'|'video', caption: string}>}
+     * @returns {Promise<{buffer: Buffer, type: 'image'|'video', caption: string}>} Object containing media buffer, type, and caption
+     * @throws {Error} If quoted message is not provided or not a view once message
+     * @example
+     * const { buffer, type, caption } = await client.readViewOnce(m.quoted);
+     * if (type === 'image') {
+     *   await client.sendImage(m.from, buffer, caption);
+     * }
      */
     async readViewOnce(quotedMessage) {
         if (!quotedMessage) {
@@ -294,10 +497,15 @@ export class Client extends EventEmitter {
 
     /**
      * Read view once message and send to chat
-     * @param {string} jid - Chat ID to send to
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID) to send to
      * @param {Object} quotedMessage - The quoted message object (m.quoted)
-     * @param {Object} options - Additional options
-     * @returns {Promise}
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @throws {Error} If reading or sending view once message fails
+     * @example
+     * // Forward a view once message
+     * await client.sendViewOnce(m.from, m.quoted);
      */
     async sendViewOnce(jid, quotedMessage, options = {}) {
         try {
@@ -321,34 +529,102 @@ export class Client extends EventEmitter {
         }
     }
 
+    /**
+     * Get group metadata
+     * @async
+     * @param {string} jid - Group JID (format: groupId@g.us)
+     * @returns {Promise<Object>} Group metadata object containing id, subject, participants, etc.
+     * @example
+     * const metadata = await client.groupMetadata('groupId@g.us');
+     * console.log(metadata.subject); // Group name
+     */
     async groupMetadata(jid) {
         return await this.sock.groupMetadata(jid);
     }
 
+    /**
+     * Update group participants (add, remove, promote, demote)
+     * @async
+     * @param {string} jid - Group JID (format: groupId@g.us)
+     * @param {Array<string>} participants - Array of participant JIDs
+     * @param {'add'|'remove'|'promote'|'demote'} action - Action to perform
+     * @returns {Promise<Object>} Update result
+     * @example
+     * // Remove participants
+     * await client.groupParticipantsUpdate('groupId@g.us', ['628xxx@s.whatsapp.net'], 'remove');
+     * // Promote to admin
+     * await client.groupParticipantsUpdate('groupId@g.us', ['628xxx@s.whatsapp.net'], 'promote');
+     */
     async groupParticipantsUpdate(jid, participants, action) {
         return await this.sock.groupParticipantsUpdate(jid, participants, action);
     }
 
+    /**
+     * Update group subject (name)
+     * @async
+     * @param {string} jid - Group JID (format: groupId@g.us)
+     * @param {string} subject - New group name
+     * @returns {Promise<Object>} Update result
+     * @example
+     * await client.groupUpdateSubject('groupId@g.us', 'My New Group Name');
+     */
     async groupUpdateSubject(jid, subject) {
         return await this.sock.groupUpdateSubject(jid, subject);
     }
 
+    /**
+     * Update group description
+     * @async
+     * @param {string} jid - Group JID (format: groupId@g.us)
+     * @param {string} description - New group description
+     * @returns {Promise<Object>} Update result
+     * @example
+     * await client.groupUpdateDescription('groupId@g.us', 'This is my group description');
+     */
     async groupUpdateDescription(jid, description) {
         return await this.sock.groupUpdateDescription(jid, description);
     }
 
+    /**
+     * Load a single plugin from file path
+     * @async
+     * @param {string} path - Path to plugin file
+     * @returns {Promise<void>}
+     * @example
+     * await client.loadPlugin('./plugins/my-plugin.js');
+     */
     async loadPlugin(path) {
         await this.pluginHandler.load(path);
     }
 
+    /**
+     * Load all plugins from a directory
+     * @async
+     * @param {string} directory - Path to plugins directory
+     * @returns {Promise<void>}
+     * @example
+     * await client.loadPlugins('./plugins');
+     */
     async loadPlugins(directory) {
         await this.pluginHandler.loadAll(directory);
     }
 
+    /**
+     * Get command prefix
+     * @returns {string} Current command prefix
+     * @example
+     * console.log(client.prefix); // '!'
+     */
     get prefix() {
         return this.config.prefix || '!';
     }
 
+    /**
+     * Set command prefix
+     * @param {string} prefix - New command prefix
+     * @example
+     * client.prefix = '.';
+     */
     set prefix(prefix) {
         this.config.prefix = prefix;
     }

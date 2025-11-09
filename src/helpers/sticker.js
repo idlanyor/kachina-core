@@ -1,10 +1,28 @@
 import { Sticker, StickerTypes } from 'wa-sticker-formatter';
 
 /**
+ * @typedef {Object} StickerOptions
+ * @property {string} [pack='Sticker'] - Sticker pack name
+ * @property {string} [author='Kachina Bot'] - Sticker author name
+ * @property {string} [type] - Sticker type (DEFAULT, FULL, CROPPED, CIRCLE, ROUNDED)
+ * @property {Array<string>} [categories=[]] - Sticker categories
+ * @property {string} [id=''] - Sticker ID
+ * @property {number} [quality=50] - Image quality (1-100)
+ * @property {string} [background='transparent'] - Background color
+ */
+
+/**
  * Create sticker from image/video buffer
- * @param {Buffer} buffer - Image or video buffer
- * @param {Object} options - Sticker options
- * @returns {Promise<Buffer>} Sticker buffer
+ * @async
+ * @param {Buffer|string} buffer - Image or video buffer, or file path/URL
+ * @param {StickerOptions} [options={}] - Sticker configuration options
+ * @returns {Promise<Buffer>} Sticker buffer ready to send
+ * @example
+ * const stickerBuffer = await createSticker(imageBuffer, {
+ *   pack: 'My Stickers',
+ *   author: 'My Bot',
+ *   type: StickerTypes.FULL
+ * });
  */
 export async function createSticker(buffer, options = {}) {
     const sticker = new Sticker(buffer, {
@@ -21,7 +39,16 @@ export async function createSticker(buffer, options = {}) {
 }
 
 /**
- * Create full sticker (no crop)
+ * Create full sticker without cropping (preserves original aspect ratio)
+ * @async
+ * @param {Buffer|string} buffer - Image or video buffer, or file path/URL
+ * @param {StickerOptions} [options={}] - Sticker configuration options
+ * @returns {Promise<Buffer>} Full sticker buffer
+ * @example
+ * const sticker = await createFullSticker(imageBuffer, {
+ *   pack: 'My Pack',
+ *   author: 'Bot'
+ * });
  */
 export async function createFullSticker(buffer, options = {}) {
     return await createSticker(buffer, {
@@ -31,7 +58,13 @@ export async function createFullSticker(buffer, options = {}) {
 }
 
 /**
- * Create cropped sticker
+ * Create cropped sticker (1:1 aspect ratio, center-cropped)
+ * @async
+ * @param {Buffer|string} buffer - Image or video buffer, or file path/URL
+ * @param {StickerOptions} [options={}] - Sticker configuration options
+ * @returns {Promise<Buffer>} Cropped sticker buffer
+ * @example
+ * const sticker = await createCroppedSticker(imageBuffer);
  */
 export async function createCroppedSticker(buffer, options = {}) {
     return await createSticker(buffer, {
@@ -41,7 +74,13 @@ export async function createCroppedSticker(buffer, options = {}) {
 }
 
 /**
- * Create circle sticker
+ * Create circle-shaped sticker
+ * @async
+ * @param {Buffer|string} buffer - Image or video buffer, or file path/URL
+ * @param {StickerOptions} [options={}] - Sticker configuration options
+ * @returns {Promise<Buffer>} Circle sticker buffer
+ * @example
+ * const sticker = await createCircleSticker(profilePicBuffer);
  */
 export async function createCircleSticker(buffer, options = {}) {
     return await createSticker(buffer, {
@@ -51,7 +90,13 @@ export async function createCircleSticker(buffer, options = {}) {
 }
 
 /**
- * Create rounded sticker
+ * Create sticker with rounded corners
+ * @async
+ * @param {Buffer|string} buffer - Image or video buffer, or file path/URL
+ * @param {StickerOptions} [options={}] - Sticker configuration options
+ * @returns {Promise<Buffer>} Rounded sticker buffer
+ * @example
+ * const sticker = await createRoundedSticker(imageBuffer);
  */
 export async function createRoundedSticker(buffer, options = {}) {
     return await createSticker(buffer, {

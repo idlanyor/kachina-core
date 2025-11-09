@@ -7,6 +7,7 @@ export default defineConfig({
   base: '/', // GitHub Pages base URL
 
   head: [
+    ['link', { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css' }],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#25D366' }],
     ['meta', { property: 'og:type', content: 'website' }],
