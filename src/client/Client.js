@@ -15,6 +15,7 @@ import {
     createSticker,
     StickerTypes
 } from '../helpers/sticker.js';
+import chalk from 'chalk';
 
 /**
  * @typedef {Object} ClientOptions
@@ -130,35 +131,61 @@ export class Client extends EventEmitter {
                 throw new Error('Phone number is required for pairing method. Example: { phoneNumber: "628123456789" }');
             }
 
-            // Format phone number (remove + and spaces)
             const phoneNumber = this.config.phoneNumber.replace(/[^0-9]/g, '');
 
             if (phoneNumber.length < 10) {
                 throw new Error('Invalid phone number format. Use country code without +. Example: 628123456789');
             }
 
-            // Request pairing code after socket is initialized
-            setTimeout(async () => {
-                try {
-                    const code = await this.sock.requestPairingCode(phoneNumber);
-                    this.emit('pairing.code', code);
+            console.log('🔐 Initiating pairing code process...');
 
-                    // Log to console with formatting
-                    console.log('\n┌─────────────────────────────────────┐');
-                    console.log('│     WhatsApp Pairing Code           │');
-                    console.log('├─────────────────────────────────────┤');
-                    console.log(`│         Code: ${code}                │`);
-                    console.log('└─────────────────────────────────────┘');
-                    console.log('\nSteps to pair:');
-                    console.log('1. Open WhatsApp on your phone');
-                    console.log('2. Go to Settings > Linked Devices');
-                    console.log('3. Tap "Link a Device"');
-                    console.log('4. Enter the code above\n');
-                } catch (error) {
-                    this.emit('pairing.error', error);
-                    console.error('Failed to request pairing code:', error.message);
+            // Request pairing code with retry mechanism
+            const requestPairingWithRetry = async () => {
+                const maxRetries = 3;
+                const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+                for (let attempt = 0; attempt < maxRetries; attempt++) {
+                    try {
+                        // Wait for socket to be ready
+                        await delay(attempt === 0 ? 5000 : 2000);
+
+                        const code = await this.sock.requestPairingCode(phoneNumber);
+                        this.emit('pairing.code', code);
+
+                        // Log to console with formatting
+                        console.log('\n┌─────────────────────────────────────┐');
+                        console.log('│     WhatsApp Pairing Code           │');
+                        console.log('├─────────────────────────────────────┤');
+                        console.log(`│         Code: ${chalk.bgYellowBright.white(code)}               │`);
+                        console.log('└─────────────────────────────────────┘');
+                        console.log('\nSteps to pair:');
+                        console.log('1. Open WhatsApp on your phone');
+                        console.log('2. Go to Settings > Linked Devices');
+                        console.log('3. Tap "Link a Device"');
+                        console.log('4. Enter the code above\n');
+                        console.log('⚠️  Make sure the phone number matches your WhatsApp account');
+
+                        return;
+                    } catch (error) {
+                        const isLastAttempt = attempt === maxRetries - 1;
+                        console.error(`Pairing attempt ${attempt + 1}/${maxRetries} failed:`, error.message);
+
+                        this.emit('pairing.error', error);
+
+                        if (isLastAttempt) {
+                            console.error('❌ Max pairing retries reached. Please try again later.');
+                            throw error; // Re-throw on last attempt
+                        } else {
+                            console.log(`⏳ Retrying in 2 seconds...`);
+                        }
+                    }
                 }
-            }, 3000);
+            };
+
+            // Execute pairing request (non-blocking)
+            requestPairingWithRetry().catch(err => {
+                console.error('Failed to complete pairing process:', err.message);
+            });
         }
 
         this.sock.ev.on('connection.update', async (update) => {
