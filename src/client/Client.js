@@ -28,7 +28,6 @@ export class Client extends EventEmitter {
         this.config = {
             sessionId: options.sessionId || 'kachina-session',
             phoneNumber: options.phoneNumber || '',
-            printQRInTerminal: options.printQRInTerminal !== false,
             loginMethod: options.loginMethod || 'qr', // 'qr' or 'pairing'
             browser: options.browser || ['Kachina-MD', 'Chrome', '1.0.0'],
             logger: options.logger || pino({ level: 'silent' }),
