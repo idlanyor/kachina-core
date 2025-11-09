@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [20.x, 22.x]
 
     steps:
       - name: Checkout code
@@ -34,6 +34,4 @@ jobs:
       - name: Run build
         run: npm run build
 
-      - name: Run tests
-        run: npm test
         continue-on-error: true

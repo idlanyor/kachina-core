@@ -7,7 +7,8 @@
   "scripts": {
     "build": "node build.js",
     "test": "node examples/basic-bot.js",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "release": "bash scripts/release.sh"
   },
   "keywords": [
     "whatsapp",
