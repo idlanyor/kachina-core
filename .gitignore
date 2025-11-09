@@ -9,3 +9,9 @@ examples/database/
 examples/*-session/
 test-session/
 .env
+
+# VitePress
+docs-site/.vitepress/dist
+docs-site/.vitepress/cache
+.vitepress/dist
+.vitepress/cache

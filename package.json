@@ -8,7 +8,10 @@
     "build": "node build.js",
     "test": "node examples/basic-bot.js",
     "prepublishOnly": "npm run build",
-    "release": "bash scripts/release.sh"
+    "release": "bash scripts/release.sh",
+    "docs:dev": "vitepress dev docs-site --host",
+    "docs:build": "vitepress build docs-site",
+    "docs:preview": "vitepress preview docs-site"
   },
   "keywords": [
     "whatsapp",
@@ -44,7 +47,9 @@
     "wa-sticker-formatter": "^4.4.4"
   },
   "devDependencies": {
-    "gradient-string": "^2.0.2"
+    "gradient-string": "^2.0.2",
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.24"
   },
   "engines": {
     "node": ">=16.0.0"

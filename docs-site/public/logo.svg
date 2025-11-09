@@ -1,0 +1,19 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="90" fill="#25D366"/>
+
+  <!-- Phone Icon -->
+  <path d="M70 50h60c8.284 0 15 6.716 15 15v70c0 8.284-6.716 15-15 15H70c-8.284 0-15-6.716-15-15V65c0-8.284 6.716-15 15-15z"
+        fill="white" opacity="0.2"/>
+
+  <!-- Chat Bubble -->
+  <path d="M120 80H80c-5.523 0-10 4.477-10 10v20c0 5.523 4.477 10 10 10h5v8l12-8h23c5.523 0 10-4.477 10-10V90c0-5.523-4.477-10-10-10z"
+        fill="white"/>
+
+  <!-- Message Lines -->
+  <line x1="85" y1="95" x2="115" y2="95" stroke="#25D366" stroke-width="3" stroke-linecap="round"/>
+  <line x1="85" y1="105" x2="105" y2="105" stroke="#25D366" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Lightning Bolt (for speed) -->
+  <path d="M105 130l-8 15h6l-4 10 12-17h-6l6-8z" fill="#FFD700" stroke="white" stroke-width="1"/>
+</svg>

@@ -2,7 +2,8 @@ import makeWASocket, {
     DisconnectReason,
     useMultiFileAuthState,
     makeCacheableSignalKeyStore,
-    fetchLatestBaileysVersion
+    fetchLatestBaileysVersion,
+    downloadMediaMessage
 } from 'baileys';
 import { Boom } from '@hapi/boom';
 import pino from 'pino';
@@ -254,6 +255,70 @@ export class Client extends EventEmitter {
         return await this.sendMessage(jid, {
             react: { text: emoji, key: messageKey }
         });
+    }
+
+    /**
+     * Read and download view once message
+     * @param {Object} quotedMessage - The quoted message object (m.quoted)
+     * @returns {Promise<{buffer: Buffer, type: 'image'|'video', caption: string}>}
+     */
+    async readViewOnce(quotedMessage) {
+        if (!quotedMessage) {
+            throw new Error('Quoted message is required');
+        }
+
+        // Get view once message
+        const ViewOnceImg = quotedMessage?.message?.imageMessage;
+        const ViewOnceVid = quotedMessage?.message?.videoMessage;
+
+        // Check if it's a view once message
+        if (!ViewOnceImg?.viewOnce && !ViewOnceVid?.viewOnce) {
+            throw new Error('Message is not a view once message');
+        }
+
+        // Download the media
+        const buffer = await downloadMediaMessage(
+            quotedMessage,
+            'buffer',
+            {},
+            { logger: this.config.logger }
+        );
+
+        // Return buffer with type and caption
+        return {
+            buffer,
+            type: ViewOnceImg ? 'image' : 'video',
+            caption: ViewOnceImg?.caption || ViewOnceVid?.caption || ''
+        };
+    }
+
+    /**
+     * Read view once message and send to chat
+     * @param {string} jid - Chat ID to send to
+     * @param {Object} quotedMessage - The quoted message object (m.quoted)
+     * @param {Object} options - Additional options
+     * @returns {Promise}
+     */
+    async sendViewOnce(jid, quotedMessage, options = {}) {
+        try {
+            // Read the view once message
+            const { buffer, type, caption } = await this.readViewOnce(quotedMessage);
+
+            // Send based on type
+            if (type === 'image') {
+                return await this.sendImage(jid, buffer, caption, {
+                    jpegThumbnail: null,
+                    ...options
+                });
+            } else {
+                return await this.sendVideo(jid, buffer, caption, {
+                    jpegThumbnail: null,
+                    ...options
+                });
+            }
+        } catch (error) {
+            throw new Error(`Failed to send view once: ${error.message}`);
+        }
     }
 
     async groupMetadata(jid) {
