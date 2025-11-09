@@ -1,6 +1,6 @@
 import os from 'os';
 import { performance } from 'perf_hooks';
-import { formatBytes, formatTime } from '@kachina-md/core';
+import { formatBytes, formatTime } from '@roidev/kachina-md';
 
 export default {
     name: 'ping',

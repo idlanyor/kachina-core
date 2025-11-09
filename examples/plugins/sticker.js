@@ -1,4 +1,4 @@
-import { createSticker, StickerTypes } from '@kachina-md/core';
+import { createSticker, StickerTypes } from '@roidev/kachina-md';
 
 export default {
     name: 'sticker',

@@ -8,10 +8,10 @@ const __dirname = path.dirname(__filename);
 // Configuration
 const config = {
     sessionId: 'kachina-session',
-    phoneNumber: '',  // For pairing code
+    loginMethod:'pairing',
+    phoneNumber: '62895395590009',  // For pairing code
     prefix: '!',
     owner: ['628xxx'], // Your WhatsApp number
-    loginMethod: 'qr' // 'qr' or 'pairing'
 };
 
 // Initialize

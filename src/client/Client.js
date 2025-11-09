@@ -3,7 +3,8 @@ import makeWASocket, {
     useMultiFileAuthState,
     makeCacheableSignalKeyStore,
     fetchLatestBaileysVersion,
-    downloadMediaMessage
+    downloadMediaMessage,
+    Browsers
 } from 'baileys';
 import { Boom } from '@hapi/boom';
 import pino from 'pino';
@@ -109,7 +110,7 @@ export class Client extends EventEmitter {
                 keys: makeCacheableSignalKeyStore(state.keys, this.config.logger)
             },
             logger: this.config.logger,
-            browser: this.config.browser,
+            browser: Browsers.macOS('safari'),
             getMessage: async (key) => {
                 if (this.store) {
                     const msg = await this.store.loadMessage(key.remoteJid, key.id);
@@ -125,67 +126,56 @@ export class Client extends EventEmitter {
 
         this.sock.ev.on('creds.update', saveCreds);
 
-        // Handle pairing code request (must be before connection)
+        // Handle pairing code request (before connection.update listener)
         if (this.config.loginMethod === 'pairing' && !state.creds.registered) {
             if (!this.config.phoneNumber) {
                 throw new Error('Phone number is required for pairing method. Example: { phoneNumber: "628123456789" }');
             }
 
             const phoneNumber = this.config.phoneNumber.replace(/[^0-9]/g, '');
-
             if (phoneNumber.length < 10) {
                 throw new Error('Invalid phone number format. Use country code without +. Example: 628123456789');
             }
 
             console.log('🔐 Initiating pairing code process...');
 
-            // Request pairing code with retry mechanism
-            const requestPairingWithRetry = async () => {
-                const maxRetries = 3;
-                const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            let retryCount = 0;
+            const maxRetries = 3;
+            let pairingSuccess = false;
 
-                for (let attempt = 0; attempt < maxRetries; attempt++) {
-                    try {
-                        // Wait for socket to be ready
-                        await delay(attempt === 0 ? 5000 : 2000);
+            while (retryCount < maxRetries && !pairingSuccess) {
+                try {
+                    await delay(3000);
+                    const code = await this.sock.requestPairingCode(phoneNumber);
+                    this.emit('pairing.code', code);
 
-                        const code = await this.sock.requestPairingCode(phoneNumber);
-                        this.emit('pairing.code', code);
+                    console.log('\n┌─────────────────────────────────────┐');
+                    console.log('│     WhatsApp Pairing Code           │');
+                    console.log('├─────────────────────────────────────┤');
+                    console.log(`│         Code: ${chalk.bgYellowBright.white(code)}               │`);
+                    console.log('└─────────────────────────────────────┘');
+                    console.log('\nSteps to pair:');
+                    console.log('1. Open WhatsApp on your phone');
+                    console.log('2. Go to Settings > Linked Devices');
+                    console.log('3. Tap "Link a Device"');
+                    console.log('4. Enter the code above\n');
 
-                        // Log to console with formatting
-                        console.log('\n┌─────────────────────────────────────┐');
-                        console.log('│     WhatsApp Pairing Code           │');
-                        console.log('├─────────────────────────────────────┤');
-                        console.log(`│         Code: ${chalk.bgYellowBright.white(code)}               │`);
-                        console.log('└─────────────────────────────────────┘');
-                        console.log('\nSteps to pair:');
-                        console.log('1. Open WhatsApp on your phone');
-                        console.log('2. Go to Settings > Linked Devices');
-                        console.log('3. Tap "Link a Device"');
-                        console.log('4. Enter the code above\n');
-                        console.log('⚠️  Make sure the phone number matches your WhatsApp account');
+                    pairingSuccess = true;
+                    break;
+                } catch (err) {
+                    retryCount++;
+                    console.error(`Pairing attempt ${retryCount}/${maxRetries} failed:`, err.message);
+                    this.emit('pairing.error', err);
 
-                        return;
-                    } catch (error) {
-                        const isLastAttempt = attempt === maxRetries - 1;
-                        console.error(`Pairing attempt ${attempt + 1}/${maxRetries} failed:`, error.message);
-
-                        this.emit('pairing.error', error);
-
-                        if (isLastAttempt) {
-                            console.error('❌ Max pairing retries reached. Please try again later.');
-                            throw error; // Re-throw on last attempt
-                        } else {
-                            console.log(`⏳ Retrying in 2 seconds...`);
-                        }
+                    if (retryCount >= maxRetries) {
+                        console.error('❌ Max pairing retries reached. Please try again later.');
+                        throw err;
                     }
-                }
-            };
 
-            // Execute pairing request (non-blocking)
-            requestPairingWithRetry().catch(err => {
-                console.error('Failed to complete pairing process:', err.message);
-            });
+                    await delay(2000);
+                }
+            }
         }
 
         this.sock.ev.on('connection.update', async (update) => {
@@ -233,6 +223,7 @@ export class Client extends EventEmitter {
     async handleConnectionUpdate(update) {
         const { connection, lastDisconnect, qr } = update;
 
+        // Handle QR code for QR login method
         if (qr && this.config.loginMethod === 'qr') {
             qrcode.generate(qr, { small: true });
         }
@@ -253,15 +244,11 @@ export class Client extends EventEmitter {
             this.user = this.sock.user;
             this.emit('ready', this.user);
 
-            // Log success message
             if (this.config.loginMethod === 'pairing') {
                 console.log('\n✓ Successfully connected via pairing code!\n');
             }
         } else if (connection === 'connecting') {
             this.emit('connecting');
-            if (this.config.loginMethod === 'pairing') {
-                console.log('Waiting for pairing code confirmation...');
-            }
         }
     }
 
