@@ -267,6 +267,29 @@ export class Client extends EventEmitter {
     }
 
     /**
+     * Normalize media input to handle both buffers and URLs
+     * @private
+     * @param {Buffer|string|{url: string|Buffer}} input - Buffer, URL, file path, or url object
+     * @returns {Buffer|{url: string|Buffer}} Normalized media input
+     */
+    _normalizeMediaInput(input) {
+        // If it's a Buffer, return as-is
+        if (Buffer.isBuffer(input)) {
+            return input;
+        }
+        // If it's a string (URL or file path), wrap in url object
+        if (typeof input === 'string') {
+            return { url: input };
+        }
+        // If it's already an object with url, return as-is
+        if (input && typeof input === 'object' && 'url' in input) {
+            return input;
+        }
+        // Fallback: return as-is (shouldn't happen, but safe)
+        return input;
+    }
+
+    /**
      * Send a text message
      * @async
      * @param {string} jid - WhatsApp JID (chat ID)
@@ -289,11 +312,16 @@ export class Client extends EventEmitter {
      * @param {Object} [options={}] - Additional options
      * @returns {Promise<Object>} Sent message object
      * @example
+     * // Send with buffer
      * await client.sendImage('628xxx@s.whatsapp.net', imageBuffer, 'My Image');
+     * // Send with URL
+     * await client.sendImage('628xxx@s.whatsapp.net', 'https://example.com/image.jpg', 'My Image');
+     * // Send with file path
+     * await client.sendImage('628xxx@s.whatsapp.net', './path/to/image.jpg', 'My Image');
      */
     async sendImage(jid, buffer, caption = '', options = {}) {
         const content = {
-            image: buffer,
+            image: this._normalizeMediaInput(buffer),
             ...options
         };
         if (caption) content.caption = caption;
@@ -309,11 +337,16 @@ export class Client extends EventEmitter {
      * @param {Object} [options={}] - Additional options
      * @returns {Promise<Object>} Sent message object
      * @example
+     * // Send with buffer
      * await client.sendVideo('628xxx@s.whatsapp.net', videoBuffer, 'My Video');
+     * // Send with URL
+     * await client.sendVideo('628xxx@s.whatsapp.net', 'https://example.com/video.mp4', 'My Video');
+     * // Send with file path
+     * await client.sendVideo('628xxx@s.whatsapp.net', './path/to/video.mp4', 'My Video');
      */
     async sendVideo(jid, buffer, caption = '', options = {}) {
         const content = {
-            video: buffer,
+            video: this._normalizeMediaInput(buffer),
             ...options
         };
         if (caption) content.caption = caption;
@@ -324,20 +357,24 @@ export class Client extends EventEmitter {
      * Send an audio message
      * @async
      * @param {string} jid - WhatsApp JID (chat ID)
-     * @param {Buffer|string} buffer - Audio buffer or file path/URL
+     * @param {Buffer|string} urlBuffer - Audio buffer or file path/URL
      * @param {Object} [options={}] - Additional options
      * @param {string} [options.mimetype='audio/mp4'] - Audio mime type
      * @param {boolean} [options.ptt=false] - Push to talk (voice note)
      * @returns {Promise<Object>} Sent message object
      * @example
-     * // Send as audio file
+     * // Send as audio file with buffer
      * await client.sendAudio('628xxx@s.whatsapp.net', audioBuffer);
      * // Send as voice note
      * await client.sendAudio('628xxx@s.whatsapp.net', audioBuffer, { ptt: true });
+     * // Send with URL
+     * await client.sendAudio('628xxx@s.whatsapp.net', 'https://example.com/audio.mp3');
+     * // Send with file path
+     * await client.sendAudio('628xxx@s.whatsapp.net', './path/to/audio.mp3');
      */
-    async sendAudio(jid, buffer, options = {}) {
+    async sendAudio(jid, urlBuffer, options = {}) {
         const content = {
-            audio: buffer,
+            audio: this._normalizeMediaInput(urlBuffer),
             mimetype: options.mimetype || 'audio/mp4',
             ptt: options.ptt || false, // Push to talk (voice note)
             ...options
@@ -355,11 +392,16 @@ export class Client extends EventEmitter {
      * @param {Object} [options={}] - Additional options
      * @returns {Promise<Object>} Sent message object
      * @example
+     * // Send with buffer
      * await client.sendDocument('628xxx@s.whatsapp.net', pdfBuffer, 'file.pdf', 'application/pdf');
+     * // Send with URL
+     * await client.sendDocument('628xxx@s.whatsapp.net', 'https://example.com/file.pdf', 'file.pdf', 'application/pdf');
+     * // Send with file path
+     * await client.sendDocument('628xxx@s.whatsapp.net', './path/to/file.pdf', 'file.pdf', 'application/pdf');
      */
     async sendDocument(jid, buffer, filename, mimetype, options = {}) {
         return await this.sendMessage(jid, {
-            document: buffer,
+            document: this._normalizeMediaInput(buffer),
             fileName: filename,
             mimetype,
             ...options
@@ -611,7 +653,12 @@ export class Client extends EventEmitter {
                     { message: innerMsg, key: quotedMessage.key },
                     'buffer',
                     {},
-                    { logger: this.config.logger }
+                    {
+                        logger: this.config.logger,
+                        reuploadRequest: function (msg) {
+                            throw new Error('Function not implemented.');
+                        }
+                    }
                 );
                 this.config.logger?.debug('Downloaded view once using downloadMediaMessage with innerMsg');
             } catch (err) {
@@ -627,7 +674,12 @@ export class Client extends EventEmitter {
                     quotedMessage,
                     'buffer',
                     {},
-                    { logger: this.config.logger }
+                    {
+                        logger: this.config.logger,
+                        reuploadRequest: function (msg) {
+                            throw new Error('Function not implemented.');
+                        }
+                    }
                 );
                 this.config.logger?.debug('Downloaded view once using downloadMediaMessage with quotedMessage');
             } catch (err) {
@@ -642,20 +694,40 @@ export class Client extends EventEmitter {
             throw new Error(errorMsg);
         }
 
-        // Return buffer with type and caption
-        const result = {
-            buffer,
-            caption: ViewOnceImg?.caption || ViewOnceVid?.caption || ViewOnceAud?.caption || ''
-        };
+        // Determine media type and build result
+        /** @type {'image'|'video'|'audio'} */
+        let type;
+        let mimetype;
+        let ptt;
+        let caption = '';
 
         if (ViewOnceImg) {
-            result.type = 'image';
+            type = 'image';
+            caption = ViewOnceImg.caption || '';
         } else if (ViewOnceVid) {
-            result.type = 'video';
+            type = 'video';
+            caption = ViewOnceVid.caption || '';
         } else if (ViewOnceAud) {
-            result.type = 'audio';
-            result.mimetype = ViewOnceAud.mimetype || 'audio/mpeg';
-            result.ptt = !!ViewOnceAud.ptt;
+            type = 'audio';
+            caption = ViewOnceAud.caption || '';
+            mimetype = ViewOnceAud.mimetype || 'audio/mpeg';
+            ptt = !!ViewOnceAud.ptt;
+        } else {
+            throw new Error('Unable to determine view once media type');
+        }
+
+        // Build result object with type always present
+        /** @type {{buffer: Buffer, type: 'image'|'video'|'audio', caption: string, mimetype?: string, ptt?: boolean}} */
+        const result = {
+            buffer,
+            type,
+            caption
+        };
+
+        // Add audio-specific properties if applicable
+        if (type === 'audio') {
+            result.mimetype = mimetype;
+            result.ptt = ptt;
         }
 
         return result;

@@ -205,7 +205,7 @@ process.on('unhandledRejection', (error) => {
 
 Here's a recommended project structure:
 
-```
+```bash
 my-whatsapp-bot/
 ├── node_modules/
 ├── sessions/           # Bot sessions stored here
