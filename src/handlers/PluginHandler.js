@@ -234,18 +234,18 @@ export class PluginHandler {
 
     /**
      * Check if user is bot owner
-     * @param {string} jid - User JID to check
+     * @param {string} lid - User JID to check
      * @returns {boolean} True if user is owner
      * @example
      * if (handler.isOwner(m.sender)) {
      *   // Owner-only logic
      * }
      */
-    isOwner(jid) {
-        const owners = this.client.config.owners || this.client.config.owner || [];
+    isOwner(lid) {
+        const owners = this.client.config.owners || [];
         const ownerList = Array.isArray(owners) ? owners : [owners];
-        const number = jid.split('@')[0];
-        return ownerList.includes(number) || ownerList.includes(jid);
+        const number = lid.split('@')[0];
+        return ownerList.includes(number) || ownerList.includes(lid);
     }
 
     /**
