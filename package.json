@@ -1,6 +1,6 @@
 {
   "name": "@roidev/kachina-md",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "WhatsApp Bot Framework - Simple, Fast, and Modular",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
