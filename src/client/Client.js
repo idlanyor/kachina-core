@@ -22,6 +22,7 @@ import chalk from 'chalk';
  * @typedef {Object} ClientOptions
  * @property {string} [sessionId='kachina-session'] - Session ID for storing authentication data
  * @property {string} [phoneNumber=''] - Phone number for pairing method (format: 628123456789)
+ * @property {Array<string>} [owners=[]] - List of bot owner phone numbers (format: 628123456789)
  * @property {'qr'|'pairing'} [loginMethod='qr'] - Login method: 'qr' for QR code, 'pairing' for pairing code
  * @property {Array<string>} [browser=['Kachina-MD', 'Chrome', '1.0.0']] - Browser identification
  * @property {Object} [logger] - Pino logger instance
@@ -31,6 +32,7 @@ import chalk from 'chalk';
 
 /**
  * Main WhatsApp bot client class
+ * @description Core client for WhatsApp bot operations with plugin support
  *
  * @class Client
  * @extends EventEmitter
@@ -74,6 +76,7 @@ export class Client extends EventEmitter {
         this.config = {
             sessionId: options.sessionId || 'kachina-session',
             phoneNumber: options.phoneNumber || '',
+            owner: options.owners || [],
             loginMethod: options.loginMethod || 'qr', // 'qr' or 'pairing'
             browser: options.browser || ['Kachina-MD', 'Chrome', '1.0.0'],
             logger: options.logger || pino({ level: 'silent' }),
