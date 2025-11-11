@@ -69,7 +69,7 @@ export async function serialize(messages, sock) {
                 remoteJid: m.chat,
                 fromMe: msg.message[type].contextInfo.participant === sock.user.id,
                 id: msg.message[type].contextInfo.stanzaId,
-                participant: m.isGroup ? m.key.participantLid : m.key.participant
+                participant:  msg.key.participant
             },
             message: quoted,
             pushName: msg.message[type].contextInfo.pushName || ''
