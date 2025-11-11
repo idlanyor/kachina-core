@@ -29,7 +29,7 @@ import { fileTypeFromBuffer } from 'file-type';
 /**
  * Serialize raw Baileys message into standardized format with helper methods
  * @async
- * @param {import('baileys').WAMessage} msg - Raw Baileys message object
+ * @param {import('baileys').WAMessage[]} messages - Raw Baileys message object
  * @param {Object} sock - WhatsApp socket instance
  * @returns {Promise<SerializedMessage>} Serialized message object
  * @example
@@ -38,8 +38,9 @@ import { fileTypeFromBuffer } from 'file-type';
  * await m.reply('Hello!'); // Reply to message
  * await m.react('👍'); // React with emoji
  */
-export async function serialize(msg, sock) {
-    msg = msg[0];
+export async function serialize(messages, sock) {
+    let msg = messages[0];
+
     if (!msg) return null;
     const m = {};
 
@@ -68,7 +69,7 @@ export async function serialize(msg, sock) {
                 remoteJid: m.chat,
                 fromMe: msg.message[type].contextInfo.participant === sock.user.id,
                 id: msg.message[type].contextInfo.stanzaId,
-                participant: m.isGroup ? m.key.participantLid : m.key.participant
+                participant: m.isGroup ? m.key?.participantLid : m.key?.participant
             },
             message: quoted,
             pushName: msg.message[type].contextInfo.pushName || ''

@@ -188,15 +188,13 @@ export class Client extends EventEmitter {
         this.sock.ev.on('messages.upsert', async ({ messages, type }) => {
             if (type !== 'notify') return;
 
-            for (const message of messages) {
-                const m = await serialize(message, this.sock);
+                const m = await serialize(messages, this.sock);
                 this.emit('message', m);
 
                 // Auto plugin handler
                 if (this.pluginHandler.isLoaded && m.body?.startsWith(this.config.prefix || '!')) {
                     await this.pluginHandler.execute(m);
                 }
-            }
         });
 
         this.sock.ev.on('group-participants.update', (update) => {
