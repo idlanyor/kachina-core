@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better console output formatting for pairing codes
 - Enhanced type definitions for sticker methods
 
-## [2.0.4] - 2025-11-09
+## [2.1.9] - 2025-11-09
 
 ### Added
 - 🔐 **Pairing Code Authentication** - Alternative login method without QR code

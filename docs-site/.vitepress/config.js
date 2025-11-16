@@ -25,7 +25,7 @@ export default defineConfig({
       { text: 'API', link: '/api/client' },
       { text: 'Examples', link: '/examples/basic-bot' },
       {
-        text: 'v2.0.4',
+        text: 'v2.1.9',
         items: [
           { text: 'Changelog', link: '/changelog' },
           { text: 'Contributing', link: '/contributing' }
@@ -68,14 +68,6 @@ export default defineConfig({
             { text: 'Stickers', link: '/guide/features/stickers' },
             { text: 'View Once Messages', link: '/guide/features/view-once' },
             { text: 'Groups', link: '/guide/features/groups' },
-          ]
-        },
-        {
-          text: 'Deployment',
-          items: [
-            { text: 'Docker', link: '/guide/deployment/docker' },
-            { text: 'VPS', link: '/guide/deployment/vps' },
-            { text: 'CI/CD', link: '/guide/deployment/cicd' },
           ]
         }
       ],
