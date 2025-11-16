@@ -4,6 +4,16 @@ WhatsApp Bot Framework - Simple, Fast, and Modular
 
 [![npm version](https://img.shields.io/npm/v/@roidev/kachina-md.svg)](https://www.npmjs.com/package/@roidev/kachina-md)
 [![License](https://img.shields.io/npm/l/@roidev/kachina-md.svg)](https://github.com/your-username/kachina-core/blob/main/LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-kachina--core-blue)](https://kachina-core.antidonasi.web.id/)
+
+## 📖 Documentation
+
+Complete documentation is available at [https://kachina-core.antidonasi.web.id/](https://kachina-core.antidonasi.web.id/)
+
+- 🚀 [Getting Started](https://kachina-core.antidonasi.web.id/guide/getting-started)
+- 📘 [API Reference](https://kachina-core.antidonasi.web.id/api/client)
+- 💡 [Examples](https://kachina-core.antidonasi.web.id/examples/basic-bot)
+- 🔐 [Authentication Guide](https://kachina-core.antidonasi.web.id/guide/authentication/overview)
 
 ## 🚀 Features
 
@@ -468,9 +478,10 @@ MIT © Roynaldi
 
 ## 🔗 Links
 
-- [Baileys](https://github.com/WhiskeySockets/Baileys) - WhatsApp Web API
-- [NPM Package](https://www.npmjs.com/package/@roidev/kachina-md)
-- [GitHub](https://github.com/your-username/kachina-core)
+- 📖 [Documentation](https://kachina-core.antidonasi.web.id/) - Complete documentation
+- 📦 [NPM Package](https://www.npmjs.com/package/@roidev/kachina-md) - Install via NPM
+- 💻 [GitHub](https://github.com/idlanyor/kachina-core) - Source code
+- 🔧 [Baileys](https://github.com/WhiskeySockets/Baileys) - WhatsApp Web API
 
 ## ⚠️ Disclaimer
 
