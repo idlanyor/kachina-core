@@ -48,23 +48,23 @@ features:
     title: View Once Reader
     details: Read and download view once messages. Extract media from temporary messages.
 
-  - icon: 👥
+  - icon: <i class="fa-solid fa-people-group"></i>
     title: Group Management
     details: Complete group management API. Create groups, manage participants, update settings, and more.
 
-  - icon: 🐳
+  - icon: <i class="fa-solid fa-docker"></i>
     title: Docker Ready
     details: Production-ready with Docker support. Deploy anywhere with containerization.
 
-  - icon: 📝
+  - icon: <i class="fa-solid fa-file-code"></i>
     title: TypeScript Support
     details: Full TypeScript definitions included for better IDE support and type safety.
 
-  - icon: 🔄
+  - icon: <i class="fa-solid fa-arrows-rotate"></i>
     title: Auto Reconnect
     details: Automatic reconnection handling. Your bot stays online even during network issues.
 
-  - icon: 📚
+  - icon: <i class="fa-solid fa-book"></i>
     title: Comprehensive Docs
     details: Detailed documentation with examples, tutorials, and API references. Everything you need to get started.
 ---

@@ -4,54 +4,44 @@ This guide will help you install Kachina-MD and set up your development environm
 
 ## Prerequisites
 
-Before installing Kachina-MD, make sure you have:
+Before installing Kachina-MD, ensure you have the following:
 
 ### Required
 
-- **Node.js** 16.0.0 or higher ([Download](https://nodejs.org/))
-- **npm**, **yarn**, or **pnpm** package manager (comes with Node.js)
-- A **WhatsApp account** for bot authentication
+- **Node.js** version 16.0.0 or higher
+  - Check version: `node --version`
+  - Download from: [nodejs.org](https://nodejs.org/)
+
+- **npm**, **yarn**, or **pnpm** package manager
+  - npm comes with Node.js
+  - Yarn: `npm install -g yarn`
+  - pnpm: `npm install -g pnpm`
+
+- **WhatsApp Account**
+  - Active WhatsApp account on your mobile device
+  - For bot authentication
 
 ### Recommended
 
-- **Code editor** (VS Code, WebStorm, etc.)
 - **Git** for version control
-- **Terminal/Command line** knowledge
-
-## Check Node.js Version
-
-Verify your Node.js installation:
-
-```bash
-node --version
-# Should output v16.x.x or higher
-```
-
-If you need to update Node.js:
-- [Download from nodejs.org](https://nodejs.org/)
-- Or use [nvm](https://github.com/nvm-sh/nvm) (recommended)
-
-```bash
-# Using nvm
-nvm install 20
-nvm use 20
-```
+- **Code editor** (VS Code, Sublime Text, etc.)
+- **Terminal** with unicode support (for QR codes)
 
 ## Installation Methods
 
-### Method 1: NPM (Recommended)
+### Using npm
 
 ```bash
 npm install @roidev/kachina-md
 ```
 
-### Method 2: Yarn
+### Using yarn
 
 ```bash
 yarn add @roidev/kachina-md
 ```
 
-### Method 3: PNPM
+### Using pnpm
 
 ```bash
 pnpm add @roidev/kachina-md
@@ -59,98 +49,85 @@ pnpm add @roidev/kachina-md
 
 ## Project Setup
 
-### Option 1: Start from Scratch
-
-Create a new project:
+### 1. Create Project Directory
 
 ```bash
-# Create project directory
 mkdir my-whatsapp-bot
 cd my-whatsapp-bot
-
-# Initialize npm project
-npm init -y
-
-# Install Kachina-MD
-npm install @roidev/kachina-md
 ```
 
-### Option 2: Add to Existing Project
+### 2. Initialize Package
 
 ```bash
-# In your existing project
-npm install @roidev/kachina-md
+npm init -y
 ```
 
-## Configure ES Modules
+### 3. Update package.json
 
-Kachina-MD uses ES modules. Update your `package.json`:
+Add `"type": "module"` to use ES modules:
 
-```json {3}
+```json
 {
   "name": "my-whatsapp-bot",
+  "version": "1.0.0",
   "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
   "dependencies": {
-    "@roidev/kachina-md": "^2.0.5"
+    "@roidev/kachina-md": "^2.0.4"
   }
 }
 ```
 
-::: warning Important
-Make sure to add `"type": "module"` to your `package.json`!
-:::
+### 4. Install Kachina-MD
 
-## Create Your First Bot
+```bash
+npm install @roidev/kachina-md
+```
 
-Create `bot.js`:
+### 5. Create Bot File
+
+Create `index.js`:
 
 ```javascript
 import { Client } from '@roidev/kachina-md';
 
 const client = new Client({
-    sessionId: 'my-bot'
+    sessionId: 'my-bot',
+    prefix: '!'
 });
 
 client.on('ready', (user) => {
-    console.log('Bot is ready!');
-    console.log('Logged in as:', user.name);
+    console.log('Bot ready!', user.name);
 });
 
-client.on('message', async (message) => {
-    if (message.body === '!ping') {
-        await client.sendText(message.from, 'Pong!');
+client.on('message', async (m) => {
+    if (m.body === '!ping') {
+        await m.reply('Pong! 🏓');
     }
 });
 
-client.start().catch(console.error);
+await client.start();
 ```
 
-## Run Your Bot
+### 6. Run Your Bot
 
 ```bash
-node bot.js
+npm start
 ```
 
-A QR code will appear in your terminal. Scan it with WhatsApp to connect!
+## Verification
 
-## Verify Installation
-
-Test if everything is working:
+After installation, verify everything works:
 
 ```javascript
-import { Client } from '@roidev/kachina-md';
+import { Client, Database, Logger } from '@roidev/kachina-md';
 
-console.log('Kachina-MD imported successfully!');
-console.log('Client:', typeof Client); // Should output 'function'
-```
-
-Run it:
-
-```bash
-node test.js
-# Output:
-# Kachina-MD imported successfully!
-# Client: function
+console.log('✅ Kachina-MD installed successfully!');
+console.log('📦 Version:', require('@roidev/kachina-md/package.json').version);
 ```
 
 ## Project Structure
@@ -160,65 +137,38 @@ Recommended project structure:
 ```
 my-whatsapp-bot/
 ├── node_modules/          # Dependencies
-├── sessions/              # Bot sessions (auto-created)
-│   └── my-bot/           # Session data
-├── plugins/               # Your plugins
+├── sessions/              # Bot session data
+│   └── my-bot/           # Session folder
+├── plugins/              # Bot plugins
 │   ├── ping.js
-│   └── help.js
-├── handlers/              # Event handlers
-│   └── message.js
-├── utils/                 # Utility functions
-│   └── logger.js
-├── .env                   # Environment variables
-├── .gitignore            # Git ignore file
-├── bot.js                # Main bot file
-├── package.json          # Project config
-└── README.md             # Project docs
+│   ├── help.js
+│   └── ...
+├── database/             # Database files
+│   ├── users.json
+│   └── groups.json
+├── .env                  # Environment variables
+├── .gitignore           # Git ignore file
+├── index.js             # Main bot file
+├── package.json         # Package configuration
+└── README.md            # Project documentation
 ```
 
-## Environment Setup
-
-### Create .env File
-
-```bash
-# .env
-SESSION_ID=my-production-bot
-LOGIN_METHOD=qr
-PREFIX=!
-```
-
-### Install dotenv
-
-```bash
-npm install dotenv
-```
-
-### Use Environment Variables
-
-```javascript
-import 'dotenv/config';
-import { Client } from '@roidev/kachina-md';
-
-const client = new Client({
-    sessionId: process.env.SESSION_ID,
-    loginMethod: process.env.LOGIN_METHOD,
-    prefix: process.env.PREFIX
-});
-```
-
-## .gitignore Setup
-
-Create `.gitignore`:
+### Create .gitignore
 
 ```gitignore
 # Dependencies
 node_modules/
 
-# Sessions (sensitive!)
+# Session data (contains auth credentials)
 sessions/
-*.session/
+*-session/
+*.data.json
 
-# Environment
+# Database
+database/
+*.db
+
+# Environment variables
 .env
 .env.local
 
@@ -226,7 +176,7 @@ sessions/
 *.log
 logs/
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
@@ -237,238 +187,130 @@ Thumbs.db
 *.swo
 ```
 
-::: danger Never Commit Sessions
-Session files contain sensitive authentication data. Always add them to `.gitignore`!
-:::
-
 ## Optional Dependencies
+
+### For Enhanced Features
+
+```bash
+# Image processing
+npm install sharp
+
+# Advanced stickers
+npm install wa-sticker-formatter
+
+# Environment variables
+npm install dotenv
+
+# HTTP requests
+npm install axios
+```
 
 ### Development Tools
 
 ```bash
-# TypeScript (if you prefer TypeScript)
+# TypeScript support
 npm install -D typescript @types/node
 
-# Nodemon (auto-restart on file changes)
-npm install -D nodemon
+# Code formatting
+npm install -D prettier
 
-# ESLint (code linting)
+# Linting
 npm install -D eslint
 ```
 
-### Utility Libraries
+## Environment Variables
 
-```bash
-# dotenv (environment variables)
-npm install dotenv
+Create `.env` file:
 
-# axios (HTTP requests)
-npm install axios
+```env
+# Bot Configuration
+SESSION_ID=my-bot
+PREFIX=!
+LOGIN_METHOD=qr
 
-# moment (date/time handling)
-npm install moment
+# Owner Configuration
+OWNER_NUMBER=628123456789
+
+# Pairing Method (if using pairing)
+PHONE_NUMBER=628123456789
+
+# Optional
+LOG_LEVEL=info
+DATABASE_PATH=./database
 ```
 
-## TypeScript Setup
+Load in your bot:
 
-If you want to use TypeScript:
-
-### Install TypeScript
-
-```bash
-npm install -D typescript @types/node
-```
-
-### Create tsconfig.json
-
-```json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
-}
-```
-
-### Create bot.ts
-
-```typescript
+```javascript
+import 'dotenv/config';
 import { Client } from '@roidev/kachina-md';
 
 const client = new Client({
-    sessionId: 'my-bot'
+    sessionId: process.env.SESSION_ID || 'my-bot',
+    prefix: process.env.PREFIX || '!',
+    loginMethod: process.env.LOGIN_METHOD || 'qr',
+    phoneNumber: process.env.PHONE_NUMBER,
+    owners: [process.env.OWNER_NUMBER]
 });
-
-client.on('ready', (user) => {
-    console.log('Bot ready:', user.name);
-});
-
-client.on('message', async (message) => {
-    if (message.body === '!ping') {
-        await client.sendText(message.from, 'Pong!');
-    }
-});
-
-client.start().catch(console.error);
-```
-
-### Compile and Run
-
-```bash
-# Compile
-npx tsc
-
-# Run
-node dist/bot.js
-```
-
-## Development Scripts
-
-Add scripts to `package.json`:
-
-```json
-{
-  "scripts": {
-    "start": "node bot.js",
-    "dev": "nodemon bot.js",
-    "build": "tsc",
-    "lint": "eslint ."
-  }
-}
-```
-
-Usage:
-
-```bash
-# Run in production
-npm start
-
-# Run with auto-restart (development)
-npm run dev
-
-# Build TypeScript
-npm run build
-
-# Lint code
-npm run lint
-```
-
-## Docker Installation
-
-### Dockerfile
-
-```dockerfile
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
-COPY . .
-
-# Create sessions directory
-RUN mkdir -p sessions
-
-CMD ["node", "bot.js"]
-```
-
-### docker-compose.yml
-
-```yaml
-version: '3.8'
-
-services:
-  whatsapp-bot:
-    build: .
-    volumes:
-      - ./sessions:/app/sessions
-    environment:
-      - SESSION_ID=docker-bot
-      - LOGIN_METHOD=pairing
-      - PHONE_NUMBER=628123456789
-    restart: unless-stopped
-```
-
-### Build and Run
-
-```bash
-# Build image
-docker build -t my-whatsapp-bot .
-
-# Run container
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
 ```
 
 ## Troubleshooting
 
-### Error: Cannot find module
+### Module Not Found
+
+If you get "Cannot find module" errors:
 
 ```bash
-# Solution: Reinstall dependencies
+# Clear npm cache
+npm cache clean --force
+
+# Remove node_modules and reinstall
 rm -rf node_modules package-lock.json
 npm install
 ```
 
-### Error: Unexpected token 'export'
+### ERR_REQUIRE_ESM
+
+If you get this error, ensure:
+
+1. `package.json` has `"type": "module"`
+2. Using `import` instead of `require`
+3. File extensions are `.js` or `.mjs`
+
+### Permission Errors
+
+On Linux/Mac, you might need:
 
 ```bash
-# Solution: Add "type": "module" to package.json
+sudo npm install -g npm
 ```
 
-```json
-{
-  "type": "module"
-}
-```
-
-### QR Code Not Showing
-
-1. Check your terminal supports unicode
-2. Try a different terminal
-3. Use [pairing code method](/guide/authentication/pairing-code) instead
-
-### Port Already in Use
+Or use nvm (Node Version Manager):
 
 ```bash
-# Find process using port
-lsof -i :PORT
-
-# Kill process
-kill -9 PID
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 18
+nvm use 18
 ```
 
-### Permission Denied
+### Network Issues
+
+If installation fails due to network:
 
 ```bash
-# Linux/Mac: Give execute permission
-chmod +x bot.js
+# Use different registry
+npm config set registry https://registry.npmjs.org/
 
-# Run with sudo (not recommended)
-sudo node bot.js
+# Or use a mirror
+npm config set registry https://registry.npmmirror.com
 ```
 
-## Updating Kachina-MD
+## Updating
 
-### Check Current Version
+### Check for Updates
 
 ```bash
-npm list @roidev/kachina-md
+npm outdated @roidev/kachina-md
 ```
 
 ### Update to Latest
@@ -480,53 +322,23 @@ npm update @roidev/kachina-md
 ### Update to Specific Version
 
 ```bash
-npm install @roidev/kachina-md@2.0.5
+npm install @roidev/kachina-md@2.0.4
 ```
-
-### Check for Outdated Packages
-
-```bash
-npm outdated
-```
-
-## Platform-Specific Notes
-
-### Windows
-
-- Use **PowerShell** or **CMD** as terminal
-- May need to enable developer mode for symlinks
-- Use `\` instead of `/` in paths (or use forward slashes in Node.js)
-
-### macOS
-
-- May need to install **Xcode Command Line Tools**:
-  ```bash
-  xcode-select --install
-  ```
-
-### Linux
-
-- May need build tools for native dependencies:
-  ```bash
-  sudo apt-get install build-essential
-  ```
 
 ## Next Steps
 
-Now that Kachina-MD is installed:
+Now that you have Kachina-MD installed:
 
-1. ✅ [Get started with your first bot](/guide/getting-started)
-2. ✅ [Learn about authentication methods](/guide/authentication/overview)
-3. ✅ [Explore core concepts](/guide/core/client)
-4. ✅ [Build features](/guide/features/sending-messages)
+1. [Create your first bot](/guide/getting-started)
+2. [Choose authentication method](/guide/authentication/overview)
+3. [Learn about the Client](/guide/core/client)
+4. [Explore examples](/examples/basic-bot)
 
 ## Getting Help
 
-If you're stuck:
+If you encounter issues:
 
-- 📖 Check the [Getting Started Guide](/guide/getting-started)
-- 💬 [Ask in Discussions](https://github.com/idlanyor/kachina-core/discussions)
-- 🐛 [Report issues](https://github.com/idlanyor/kachina-core/issues)
-- 📚 Browse [examples](/examples/basic-bot)
-
-Happy coding! 🚀
+- 📖 Check the [documentation](/guide/getting-started)
+- 💬 [Open a discussion](https://github.com/idlanyor/kachina-core/discussions)
+- 🐛 [Report a bug](https://github.com/idlanyor/kachina-core/issues)
+- 📦 [View on npm](https://www.npmjs.com/package/@roidev/kachina-md)

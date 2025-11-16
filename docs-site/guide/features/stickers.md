@@ -7,11 +7,21 @@ Create and send WhatsApp stickers from images and videos with Kachina-MD's built
 ```javascript
 import fs from 'fs';
 
-// Load image
+// From file buffer
 const buffer = fs.readFileSync('image.jpg');
-
-// Create and send sticker
 await client.sendSticker(jid, buffer, {
+    pack: 'My Stickers',
+    author: 'Bot Name'
+});
+
+// From URL
+await client.sendSticker(jid, 'https://example.com/image.jpg', {
+    pack: 'My Stickers',
+    author: 'Bot Name'
+});
+
+// From file path
+await client.sendSticker(jid, './images/photo.jpg', {
     pack: 'My Stickers',
     author: 'Bot Name'
 });
@@ -38,17 +48,17 @@ await client.sendSticker(jid, videoBuffer);
 ### From URL
 
 ```javascript
-import axios from 'axios';
+// Direct URL to image
+await client.sendSticker(
+    jid,
+    'https://example.com/image.jpg',
+    {
+        pack: 'Downloaded Stickers',
+        author: 'Bot'
+    }
+);
 
-const response = await axios.get('https://example.com/image.jpg', {
-    responseType: 'arraybuffer'
-});
-
-const buffer = Buffer.from(response.data);
-await client.sendSticker(jid, buffer, {
-    pack: 'Downloaded',
-    author: 'Bot'
-});
+// Note: The client handles URL fetching internally
 ```
 
 ### From Message

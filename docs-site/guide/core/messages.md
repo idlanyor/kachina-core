@@ -19,15 +19,15 @@ Every message has these common properties:
 ```javascript
 client.on('message', async (m) => {
     // Message metadata
-    console.log('From:', m.from);              // Sender JID
+    console.log('Chat:', m.chat);              // Chat JID (remoteJid)
+    console.log('From:', m.sender);            // Sender JID
     console.log('Sender:', m.pushName);        // Sender name
     console.log('Body:', m.body);              // Message text
-    console.log('Timestamp:', m.messageTimestamp); // Unix timestamp
 
     // Message type checks
     console.log('From me:', m.fromMe);         // Is from bot
     console.log('Is group:', m.isGroup);       // Is group message
-    console.log('Has media:', m.hasMedia);     // Has media attachment
+    console.log('Type:', m.type);              // Message type
     console.log('Is quoted:', m.quoted);       // Is reply to another message
 
     // Message key
@@ -40,31 +40,35 @@ client.on('message', async (m) => {
 ```typescript
 {
     // Identifiers
-    from: string,                 // Sender JID (e.g., '628xxx@s.whatsapp.net')
     key: MessageKey,              // Unique message identifier
-    messageTimestamp: number,     // Unix timestamp
+    chat: string,                 // Chat JID (remoteJid)
+    sender: string,               // Sender JID
+    fromMe: boolean,              // Message sent by bot
+    isGroup: boolean,             // Message in group chat
 
     // Content
     body: string,                 // Message text content
     message: WAMessage,           // Raw Baileys message object
+    type: string,                 // Message type (e.g., 'conversation', 'imageMessage')
 
     // Sender info
     pushName: string,             // Sender display name
-    participant?: string,         // Sender in group (if group message)
 
-    // Type flags
-    fromMe: boolean,              // Message sent by bot
-    isGroup: boolean,             // Message in group chat
-    hasMedia: boolean,            // Has media attachment
-    isViewOnce: boolean,          // Is view once message
+    // Media info
+    caption: string,              // Media caption
+    mimetype: string,             // Media mime type
+    fileSize: number,             // Media file size
 
     // Reply/Quote
     quoted?: Message,             // Quoted message (if reply)
+    mentions: Array<string>,      // Mentioned JIDs
 
     // Methods
     reply: Function,              // Quick reply method
-    download: Function,           // Download media
     react: Function,              // React to message
+    download: Function,           // Download media
+    delete: Function,             // Delete message
+    forward: Function,            // Forward message
 }
 ```
 
@@ -84,13 +88,21 @@ client.on('message', async (m) => {
 
 ```javascript
 client.on('message', async (m) => {
-    if (m.hasMedia) {
+    // Check if message has media by inspecting message type
+    const hasImage = m.message?.imageMessage;
+    const hasVideo = m.message?.videoMessage;
+    const hasAudio = m.message?.audioMessage;
+    const hasDocument = m.message?.documentMessage;
+    const hasSticker = m.message?.stickerMessage;
+
+    if (hasImage || hasVideo || hasAudio || hasDocument || hasSticker) {
         // Download media
         const buffer = await m.download();
 
-        console.log('Media type:', m.message.imageMessage ? 'image' :
-                                  m.message.videoMessage ? 'video' :
-                                  m.message.audioMessage ? 'audio' : 'document');
+        console.log('Media type:', m.type);
+        console.log('Caption:', m.caption);
+        console.log('Mimetype:', m.mimetype);
+        console.log('File size:', m.fileSize);
 
         // Process buffer
         // ...
@@ -107,7 +119,10 @@ client.on('message', async (m) => {
         console.log('Original sender:', m.quoted.pushName);
 
         // Download media from quoted message
-        if (m.quoted.hasMedia) {
+        const hasQuotedMedia = m.quoted.message?.imageMessage || 
+                              m.quoted.message?.videoMessage ||
+                              m.quoted.message?.audioMessage;
+        if (hasQuotedMedia) {
             const buffer = await m.quoted.download();
         }
     }
@@ -134,11 +149,11 @@ client.on('message', async (m) => {
 client.on('message', async (m) => {
     if (m.isGroup) {
         console.log('Group message');
-        console.log('Group JID:', m.from);
-        console.log('Sender:', m.participant);
+        console.log('Group JID:', m.chat);
+        console.log('Sender:', m.sender);
     } else {
         console.log('Private message');
-        console.log('Sender JID:', m.from);
+        console.log('Sender JID:', m.sender);
     }
 });
 ```
@@ -394,11 +409,11 @@ client.on('message', async (m) => {
 client.on('message', async (m) => {
     if (m.isGroup) {
         // Get group metadata
-        const groupMeta = await client.groupMetadata(m.from);
+        const groupMeta = await client.groupMetadata(m.chat);
 
         console.log('Group name:', groupMeta.subject);
         console.log('Participants:', groupMeta.participants.length);
-        console.log('Sender:', m.participant);
+        console.log('Sender:', m.sender);
     }
 });
 ```
@@ -413,7 +428,8 @@ client.on('message', async (m) => {
         console.log('Mentioned users:', mentions);
 
         // Check if bot is mentioned
-        if (mentions.includes(client.user.id)) {
+        const botJid = client.user.id.split(':')[0] + '@s.whatsapp.net';
+        if (mentions.includes(botJid)) {
             await m.reply('You mentioned me!');
         }
     }
@@ -431,11 +447,11 @@ client.on('message', async (m) => {
     // Commands that require admin
     if (['!kick', '!promote', '!demote'].includes(command)) {
         // Get group metadata
-        const groupMeta = await client.groupMetadata(m.from);
+        const groupMeta = await client.groupMetadata(m.chat);
 
         // Check if sender is admin
         const senderIsAdmin = groupMeta.participants.some(
-            p => p.id === m.participant && (p.admin === 'admin' || p.admin === 'superadmin')
+            p => p.id === m.sender && (p.admin === 'admin' || p.admin === 'superadmin')
         );
 
         if (!senderIsAdmin) {

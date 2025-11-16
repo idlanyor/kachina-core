@@ -73,15 +73,15 @@ client.on('message', async (m) => {
 ```javascript
 import fs from 'fs';
 
-// From file
+// From file buffer
 const buffer = fs.readFileSync('image.jpg');
 await client.sendImage(jid, buffer, 'Optional caption');
 
-// From URL
-import axios from 'axios';
-const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-const buffer = Buffer.from(response.data);
-await client.sendImage(jid, buffer, 'Downloaded image');
+// From URL string
+await client.sendImage(jid, 'https://example.com/image.jpg', 'Downloaded image');
+
+// From file path
+await client.sendImage(jid, './path/to/image.jpg', 'Image from file');
 ```
 
 #### With Options
@@ -96,13 +96,21 @@ await client.sendImage(jid, buffer, 'Caption here', {
 ### Videos
 
 ```javascript
-const buffer = fs.readFileSync('video.mp4');
+import fs from 'fs';
 
+// From file buffer
+const buffer = fs.readFileSync('video.mp4');
 await client.sendVideo(jid, buffer, 'Video caption', {
     quoted: message,
     gifPlayback: false,  // true for GIF playback
     jpegThumbnail: null
 });
+
+// From URL
+await client.sendVideo(jid, 'https://example.com/video.mp4', 'Video from URL');
+
+// From file path
+await client.sendVideo(jid, './videos/my-video.mp4', 'My video');
 ```
 
 ### Audio
@@ -110,12 +118,22 @@ await client.sendVideo(jid, buffer, 'Video caption', {
 #### Regular Audio
 
 ```javascript
-const buffer = fs.readFileSync('audio.mp3');
+import fs from 'fs';
 
+// From file buffer
+const buffer = fs.readFileSync('audio.mp3');
 await client.sendAudio(jid, buffer, {
     mimetype: 'audio/mp4',
     ptt: false  // Regular audio, not voice note
 });
+
+// From URL
+await client.sendAudio(jid, 'https://example.com/audio.mp3', {
+    mimetype: 'audio/mpeg'
+});
+
+// From file path
+await client.sendAudio(jid, './sounds/notification.mp3');
 ```
 
 #### Voice Note
@@ -132,8 +150,10 @@ await client.sendAudio(jid, buffer, {
 ### Documents
 
 ```javascript
-const buffer = fs.readFileSync('document.pdf');
+import fs from 'fs';
 
+// From file buffer
+const buffer = fs.readFileSync('document.pdf');
 await client.sendDocument(
     jid,
     buffer,
@@ -142,6 +162,22 @@ await client.sendDocument(
     {
         quoted: message
     }
+);
+
+// From URL
+await client.sendDocument(
+    jid,
+    'https://example.com/file.pdf',
+    'file.pdf',
+    'application/pdf'
+);
+
+// From file path
+await client.sendDocument(
+    jid,
+    './documents/report.pdf',
+    'report.pdf',
+    'application/pdf'
 );
 ```
 
@@ -157,11 +193,24 @@ Common mimetypes:
 ### Basic Sticker
 
 ```javascript
-const imageBuffer = fs.readFileSync('image.jpg');
+import fs from 'fs';
 
+// From file buffer
+const imageBuffer = fs.readFileSync('image.jpg');
 await client.sendSticker(jid, imageBuffer, {
     pack: 'My Stickers',
     author: 'Bot Name'
+});
+
+// From URL
+await client.sendSticker(jid, 'https://example.com/image.jpg', {
+    pack: 'Downloaded Stickers',
+    author: 'Bot'
+});
+
+// From file path
+await client.sendSticker(jid, './stickers/cute.png', {
+    pack: 'Cute Stickers'
 });
 ```
 

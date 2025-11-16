@@ -4,10 +4,10 @@ Read and download WhatsApp "View Once" messages (photos/videos that disappear af
 
 ## What are View Once Messages?
 
-View Once messages are photos or videos that can only be viewed once in WhatsApp. After viewing, they disappear automatically. With Kachina-MD, you can:
+View Once messages are photos, videos, or audio messages that can only be viewed once in WhatsApp. After viewing, they disappear automatically. With Kachina-MD, you can:
 
 - ✅ Read view once messages without them disappearing
-- ✅ Download and save view once media
+- ✅ Download and save view once media (images, videos, audio)
 - ✅ Forward view once media to other chats
 - ✅ Process view once content programmatically
 
@@ -43,7 +43,7 @@ Get the media buffer for custom processing:
 ```javascript
 const { buffer, type, caption } = await client.readViewOnce(quotedMessage);
 
-console.log('Type:', type);        // 'image' or 'video'
+console.log('Type:', type);        // 'image', 'video', or 'audio'
 console.log('Caption:', caption);  // Original caption
 console.log('Size:', buffer.length); // File size in bytes
 ```
@@ -82,9 +82,11 @@ const result = await client.readViewOnce(m.quoted);
 
 ```typescript
 {
-    buffer: Buffer,           // Media buffer
-    type: 'image' | 'video',  // Media type
-    caption: string           // Original caption
+    buffer: Buffer,                    // Media buffer
+    type: 'image' | 'video' | 'audio', // Media type
+    caption: string,                   // Original caption
+    mimetype?: string,                 // Audio mimetype (for audio only)
+    ptt?: boolean                      // Push to talk flag (for audio only)
 }
 ```
 
@@ -156,8 +158,13 @@ Revealed by: ${m.pushName}
 
             if (type === 'image') {
                 await client.sendImage(m.from, buffer, customCaption);
-            } else {
+            } else if (type === 'video') {
                 await client.sendVideo(m.from, buffer, customCaption);
+            } else if (type === 'audio') {
+                await client.sendAudio(m.from, buffer, {
+                    mimetype: result.mimetype || 'audio/mpeg',
+                    ptt: result.ptt || false
+                });
             }
 
             await m.react('✅');
@@ -183,8 +190,13 @@ Revealed by: ${m.pushName}
 
             if (type === 'image') {
                 await client.sendImage(myJid, buffer, `Saved view once\n${caption}`);
-            } else {
+            } else if (type === 'video') {
                 await client.sendVideo(myJid, buffer, `Saved view once\n${caption}`);
+            } else if (type === 'audio') {
+                await client.sendAudio(myJid, buffer, {
+                    mimetype: result.mimetype || 'audio/mpeg',
+                    ptt: result.ptt || false
+                });
             }
 
             await m.reply('✅ View once saved to your messages!');
@@ -209,7 +221,7 @@ client.on('message', async (m) => {
 
             // Generate filename
             const timestamp = Date.now();
-            const ext = type === 'image' ? 'jpg' : 'mp4';
+            const ext = type === 'image' ? 'jpg' : type === 'video' ? 'mp4' : 'mp3';
             const filename = `viewonce_${timestamp}.${ext}`;
 
             // Save to file
@@ -233,8 +245,13 @@ async function forwardViewOnce(quotedMessage, targets) {
         try {
             if (type === 'image') {
                 await client.sendImage(jid, buffer, caption);
-            } else {
+            } else if (type === 'video') {
                 await client.sendVideo(jid, buffer, caption);
+            } else if (type === 'audio') {
+                await client.sendAudio(jid, buffer, {
+                    mimetype: result.mimetype || 'audio/mpeg',
+                    ptt: result.ptt || false
+                });
             }
 
             console.log('✓ Sent to', jid);
@@ -265,7 +282,7 @@ client.on('message', async (m) => {
             const { buffer, type, caption } = await client.readViewOnce(m.quoted);
 
             // Upload to cloud (e.g., AWS S3)
-            const ext = type === 'image' ? 'jpg' : 'mp4';
+            const ext = type === 'image' ? 'jpg' : type === 'video' ? 'mp4' : 'mp3';
             const key = `viewonce/${Date.now()}.${ext}`;
             const url = await uploadToS3(buffer, key);
 
@@ -338,8 +355,13 @@ client.on('message', async (m) => {
             // Send media
             if (type === 'image') {
                 await client.sendImage(m.from, buffer, caption);
-            } else {
+            } else if (type === 'video') {
                 await client.sendVideo(m.from, buffer, caption);
+            } else if (type === 'audio') {
+                await client.sendAudio(m.from, buffer, {
+                    mimetype: result.mimetype || 'audio/mpeg',
+                    ptt: result.ptt || false
+                });
             }
 
             await m.react('✅');
@@ -518,10 +540,10 @@ try {
 
 ## Limitations
 
-- ✅ Works with images and videos only
+- ✅ Works with images, videos, and audio
 - ✅ Message must be quoted (replied to)
 - ✅ Requires view once message still exists
-- ❌ Audio view once not supported yet
+- ⚠️ Must reply to view once BEFORE it is opened
 - ❌ Download speed depends on network
 
 ## Security & Ethics
@@ -558,7 +580,11 @@ client.on('message', async (m) => {
             .map(([cmd, desc]) => `${cmd} - ${desc}`)
             .join('\n');
 
-        await m.reply(`*View Once Commands*\n\n${help}\n\nReply to a view once message`);
+        await m.reply(`*View Once Commands*
+
+${help}
+
+Reply to a view once message`);
         return;
     }
 
@@ -592,8 +618,13 @@ client.on('message', async (m) => {
 
             if (type === 'image') {
                 await client.sendImage(myJid, buffer, saveCaption);
-            } else {
+            } else if (type === 'video') {
                 await client.sendVideo(myJid, buffer, saveCaption);
+            } else if (type === 'audio') {
+                await client.sendAudio(myJid, buffer, {
+                    mimetype: result.mimetype || 'audio/mpeg',
+                    ptt: result.ptt || false
+                });
             }
 
             await m.reply('✅ Saved!');

@@ -19,16 +19,18 @@ new Client(options)
 ```typescript
 interface ClientOptions {
     // Session management
-    sessionId?: string;                    // Session folder name
+    sessionId?: string;                    // Session folder name (default: 'kachina-session')
 
     // Authentication
-    loginMethod?: 'qr' | 'pairing';       // Login method
-    phoneNumber?: string;                  // Phone number (for pairing)
+    loginMethod?: 'qr' | 'pairing';       // Login method (default: 'qr')
+    phoneNumber?: string;                  // Phone number for pairing (format: 628123456789)
+    owners?: string[];                     // Bot owner phone numbers
 
     // Configuration
-    browser?: [string, string, string];   // Browser metadata
-    prefix?: string;                       // Command prefix
+    browser?: [string, string, string];   // Browser metadata (default: ['Kachina-MD', 'Chrome', '1.0.0'])
+    prefix?: string;                       // Command prefix (default: '!')
     logger?: Logger;                       // Pino logger instance
+    store?: Object;                        // Optional message store for caching
 }
 ```
 
@@ -112,7 +114,7 @@ await client.sendImage(jid, buffer, caption, options)
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `jid` | `string` | Yes | Chat ID |
-| `buffer` | `Buffer` | Yes | Image buffer |
+| `buffer` | `Buffer\|string` | Yes | Image buffer, URL, or file path |
 | `caption` | `string` | No | Image caption |
 | `options` | `Object` | No | Additional options |
 
@@ -140,7 +142,7 @@ await client.sendVideo(jid, buffer, caption, options)
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `jid` | `string` | Yes | Chat ID |
-| `buffer` | `Buffer` | Yes | Video buffer |
+| `buffer` | `Buffer\|string` | Yes | Video buffer, URL, or file path |
 | `caption` | `string` | No | Video caption |
 | `options` | `Object` | No | Additional options |
 
@@ -166,7 +168,7 @@ await client.sendAudio(jid, buffer, options)
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `jid` | `string` | Yes | Chat ID |
-| `buffer` | `Buffer` | Yes | Audio buffer |
+| `urlBuffer` | `Buffer\|string` | Yes | Audio buffer, URL, or file path |
 | `options` | `Object` | No | Additional options |
 
 **Options:**
@@ -227,7 +229,7 @@ await client.sendSticker(jid, buffer, options)
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `jid` | `string` | Yes | Chat ID |
-| `buffer` | `Buffer` | Yes | Image/video buffer |
+| `buffer` | `Buffer\|string` | Yes | Image/video buffer, URL, or file path |
 | `options` | `Object` | No | Sticker options |
 
 **Options:**
@@ -354,9 +356,11 @@ await client.readViewOnce(quotedMessage)
 
 ```javascript
 {
-    buffer: Buffer,           // Media buffer
-    type: 'image' | 'video',  // Media type
-    caption: string           // Original caption
+    buffer: Buffer,                    // Media buffer
+    type: 'image' | 'video' | 'audio', // Media type
+    caption: string,                   // Original caption
+    mimetype?: string,                 // Audio mimetype (for audio only)
+    ptt?: boolean                      // Push to talk flag (for audio only)
 }
 ```
 
@@ -635,14 +639,27 @@ client.on('message', async (message) => {
 
 ```javascript
 {
-    from: string,          // Sender JID
+    key: Object,           // Message key
+    chat: string,          // Chat JID (remoteJid)
+    from: string,          // Sender JID (alias for chat)
+    sender: string,        // Sender JID
     body: string,          // Message text
     pushName: string,      // Sender name
     fromMe: boolean,       // From bot
     isGroup: boolean,      // Is group message
     quoted: Object,        // Quoted message
-    hasMedia: boolean,     // Has media
-    // ... and more
+    type: string,          // Message type
+    message: Object,       // Raw message object
+    caption: string,       // Media caption
+    mimetype: string,      // Media mime type
+    fileSize: number,      // Media file size
+    mentions: Array,       // Mentioned JIDs
+    // Helper methods
+    reply: Function,       // Reply to message
+    react: Function,       // React with emoji
+    download: Function,    // Download media
+    delete: Function,      // Delete message
+    forward: Function      // Forward message
 }
 ```
 

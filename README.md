@@ -33,7 +33,7 @@ import { Client } from '@roidev/kachina-md';
 const bot = new Client({
     sessionId: 'my-session',
     prefix: '!',
-    owner: ['628xxx']
+    owners: ['628xxx'] // Bot owner phone numbers
 });
 
 bot.on('ready', (user) => {
@@ -131,7 +131,7 @@ The serialized message object (`m`) includes:
 
 ```javascript
 m.key           // Message key
-m.chat          // Chat ID
+m.chat          // Chat ID (remoteJid)
 m.sender        // Sender ID
 m.pushName      // Sender push name
 m.body          // Message text
@@ -140,6 +140,9 @@ m.isGroup       // Is from group
 m.fromMe        // Is from bot
 m.quoted        // Quoted message (if any)
 m.mentions      // Mentioned JIDs
+m.caption       // Media caption
+m.mimetype      // Media mime type
+m.fileSize      // Media file size
 ```
 
 ### Methods
@@ -174,7 +177,11 @@ await bot.sendImage(jid, buffer, 'Caption', { /* options */ })
 await bot.sendVideo(jid, buffer, 'Caption', { /* options */ })
 await bot.sendAudio(jid, buffer, { mimetype: 'audio/mp4', ptt: false })
 await bot.sendDocument(jid, buffer, 'file.pdf', 'application/pdf')
-await bot.sendSticker(jid, buffer)
+await bot.sendSticker(jid, buffer, { pack: 'Pack', author: 'Author' })
+
+// View once messages
+await bot.readViewOnce(quotedMessage)  // Returns { buffer, type, caption, mimetype?, ptt? }
+await bot.sendViewOnce(jid, quotedMessage)  // Read and send view once
 
 // Send other content
 await bot.sendContact(jid, [{ displayName: 'John', vcard: '...' }])
@@ -254,12 +261,15 @@ import {
     randomNumber,
     pickRandom,
     chunk,
+    sleep,
     createSticker,
     createFullSticker,
     createCroppedSticker,
     createCircleSticker,
     createRoundedSticker,
-    StickerTypes
+    StickerTypes,
+    Logger,
+    Database
 } from '@roidev/kachina-md';
 
 // Format utilities
@@ -276,6 +286,16 @@ randomString(10)           // Random string
 randomNumber(1, 100)       // Random number
 pickRandom([1,2,3])       // Random item from array
 chunk([1,2,3,4], 2)       // [[1,2], [3,4]]
+sleep(1000)               // Sleep for 1 second (returns Promise)
+
+// Logger utility
+const logger = new Logger({ prefix: 'MyBot', level: 'info' });
+logger.info('Bot started');
+logger.success('Connected');
+logger.warn('Warning message');
+logger.error('Error occurred');
+logger.debug('Debug info');
+logger.command('!ping', 'User@s.whatsapp.net');
 
 // Sticker utilities
 const stickerBuffer = await createSticker(imageBuffer, {
@@ -404,20 +424,20 @@ export default {
 ```javascript
 const bot = new Client({
     // Session
-    sessionId: 'my-session',        // Session folder name
-    phoneNumber: '628xxx',          // For pairing code
+    sessionId: 'my-session',        // Session folder name (default: 'kachina-session')
+    phoneNumber: '628xxx',          // For pairing code (format: 628123456789)
 
     // Login
-    loginMethod: 'qr',              // 'qr' or 'pairing'
-    printQRInTerminal: true,        // Print QR in terminal
+    loginMethod: 'qr',              // 'qr' or 'pairing' (default: 'qr')
 
     // Bot config
-    prefix: '!',                    // Command prefix
-    owner: ['628xxx', '628yyy'],   // Owner numbers
+    prefix: '!',                    // Command prefix (default: '!')
+    owners: ['628xxx', '628yyy'],   // Owner numbers (array format)
 
     // Advanced
-    browser: ['Bot', 'Chrome', '1.0.0'],
-    logger: pino({ level: 'silent' })
+    browser: ['Bot', 'Chrome', '1.0.0'],  // Browser metadata
+    logger: pino({ level: 'silent' }),    // Pino logger instance
+    store: null                      // Optional message store
 });
 ```
 
