@@ -49,6 +49,10 @@ export class Client extends EventEmitter {
     sendLocation(jid: string, latitude: number, longitude: number, options?: any): Promise<any>;
     sendPoll(jid: string, name: string, values: string[], options?: any): Promise<any>;
     sendReact(jid: string, messageKey: any, emoji: string): Promise<any>;
+    sendButtonMessage(jid: string, text: string | object, buttons: any[], options?: any): Promise<any>;
+    sendListMessage(jid: string, buttonText: string, content: { text: string; title?: string; footer?: string }, sections: any[], options?: any): Promise<any>;
+    sendTemplateButtons(jid: string, buttons: any[], content: { text: string; footer?: string }, options?: any): Promise<any>;
+    sendInteractiveMessage(jid: string, content: { body: { text: string }; footer?: { text: string }; header?: any }, interactive: any, options?: any): Promise<any>;
 
     // View once methods
     readViewOnce(quotedMessage: any): Promise<{
