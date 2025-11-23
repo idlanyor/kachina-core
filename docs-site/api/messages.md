@@ -331,6 +331,70 @@ await m.copyNForward('628xxx@s.whatsapp.net');
 }
 ```
 
+### Button Response Message
+
+```javascript
+{
+    type: 'buttonsResponseMessage',
+    body: 'button_id',  // The button ID that was clicked
+    message: {
+        buttonsResponseMessage: {
+            selectedButtonId: 'button_id',
+            selectedDisplayText: 'Button Text'
+        }
+    }
+}
+```
+
+### List Response Message
+
+```javascript
+{
+    type: 'listResponseMessage',
+    body: 'row_id',  // The row ID that was selected
+    message: {
+        listResponseMessage: {
+            singleSelectReply: {
+                selectedRowId: 'row_id'
+            },
+            title: 'Selected Option',
+            description: 'Option description'
+        }
+    }
+}
+```
+
+### Template Button Reply
+
+```javascript
+{
+    type: 'templateButtonReplyMessage',
+    body: 'button_id',  // The quick reply button ID
+    message: {
+        templateButtonReplyMessage: {
+            selectedId: 'button_id',
+            selectedDisplayText: 'Button Text'
+        }
+    }
+}
+```
+
+### Interactive Response Message
+
+```javascript
+{
+    type: 'interactiveResponseMessage',
+    body: 'button_id',  // Parsed from nativeFlowResponseMessage
+    message: {
+        interactiveResponseMessage: {
+            nativeFlowResponseMessage: {
+                paramsJson: '{"id":"button_id","display_text":"Button Text"}'
+            }
+        }
+    }
+}
+```
+
 ## Quoted Messages
 
 When a message is a reply to another message:

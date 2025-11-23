@@ -22,6 +22,7 @@ Complete documentation is available at [https://kachina-core.antidonasi.web.id/]
 - 📦 Built-in database (LowDB)
 - 🎯 Event-driven architecture
 - 📱 Dual login method (QR Code & Pairing Code)
+- 🎨 Interactive buttons & custom messages (powered by sanka-baileyss)
 - 🛠️ Rich helper utilities
 - 📝 TypeScript-ready
 - 🔄 Auto-reconnect
@@ -198,6 +199,13 @@ await bot.sendContact(jid, [{ displayName: 'John', vcard: '...' }])
 await bot.sendLocation(jid, latitude, longitude)
 await bot.sendPoll(jid, 'Question?', ['Option 1', 'Option 2'])
 await bot.sendReact(jid, messageKey, '👍')
+
+// Send interactive messages (buttons, lists)
+await bot.sendButtonMessage(jid, 'Choose:', [
+  { buttonId: 'id1', buttonText: { displayText: 'Button 1' }, type: 1 }
+])
+await bot.sendListMessage(jid, 'Click Here', { text: 'Select option' }, sections)
+await bot.sendTemplateButtons(jid, buttons, { text: 'Choose', footer: 'Footer' })
 
 // Group methods
 await bot.groupMetadata(jid)
@@ -481,7 +489,7 @@ MIT © Roynaldi
 - 📖 [Documentation](https://kachina-core.antidonasi.web.id/) - Complete documentation
 - 📦 [NPM Package](https://www.npmjs.com/package/@roidev/kachina-md) - Install via NPM
 - 💻 [GitHub](https://github.com/idlanyor/kachina-core) - Source code
-- 🔧 [Baileys](https://github.com/WhiskeySockets/Baileys) - WhatsApp Web API
+- 🔧 [Sanka-Baileys](https://github.com/SankaVollereii/Sanka-Baileys) - Enhanced WhatsApp Web API
 
 ## ⚠️ Disclaimer
 

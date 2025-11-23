@@ -5,6 +5,29 @@ All notable changes to Kachina-MD will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2025-11-23
+
+### Added
+- 🎨 **Interactive Buttons** - Support for button messages with `sendButtonMessage()`
+- 📋 **List Messages** - Dropdown menu messages with `sendListMessage()`
+- 🔘 **Template Buttons** - Advanced buttons (URL, Call, Quick Reply) with `sendTemplateButtons()`
+- ⚡ **Interactive Messages** - Modern button format with `sendInteractiveMessage()`
+- 📚 **Buttons Documentation** - Complete guide for all button types with examples
+- 📖 **Button Examples** - Interactive button bot, survey bot, and settings bot examples
+- 🎯 **Button Response Handling** - Automatic parsing of button/list responses in message body
+
+### Changed
+- 🔧 **Migrated to sanka-baileyss** - Switched from `@whiskeysockets/baileys` to `sanka-baileyss` for better button support
+- 📝 **Updated README** - Added interactive buttons feature and sanka-baileyss reference
+- 🔄 **Enhanced Type Definitions** - Added TypeScript types for all button methods
+- 📊 **Updated Messages API** - Added button response message types documentation
+
+### Technical
+- Package: `baileys` now uses `sanka-baileyss` as the npm alias
+- New methods: `sendButtonMessage`, `sendListMessage`, `sendTemplateButtons`, `sendInteractiveMessage`
+- Button responses automatically serialized in `m.body` field
+- Full backward compatibility maintained with existing code
+
 ## [2.0.5] - 2025-11-09
 
 ### Added

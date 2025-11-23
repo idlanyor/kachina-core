@@ -1,6 +1,6 @@
 {
   "name": "@roidev/kachina-md",
-  "version": "2.1.9",
+  "version": "2.2.0",
   "description": "WhatsApp Bot Framework - Simple, Fast, and Modular",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -36,7 +36,7 @@
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "axios": "^1.6.0",
-    "baileys": "npm:@whiskeysockets/baileys@6.7.21",
+    "baileys": "npm:sanka-baileyss@latest",
     "chalk": "^5.3.0",
     "file-type": "^18.7.0",
     "fs-extra": "^11.2.0",

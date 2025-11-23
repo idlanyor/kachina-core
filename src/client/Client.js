@@ -511,6 +511,156 @@ export class Client extends EventEmitter {
     }
 
     /**
+     * Send button message with interactive buttons
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {string|Object} text - Message text or content object
+     * @param {Array<Object>} buttons - Array of button objects
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendButtonMessage('628xxx@s.whatsapp.net', 'Choose an option:', [
+     *   { buttonId: 'id1', buttonText: { displayText: 'Button 1' }, type: 1 },
+     *   { buttonId: 'id2', buttonText: { displayText: 'Button 2' }, type: 1 }
+     * ]);
+     *
+     * // With footer and header
+     * await client.sendButtonMessage('628xxx@s.whatsapp.net', {
+     *   text: 'Choose an option:',
+     *   footer: 'Footer text',
+     *   headerType: 1
+     * }, [
+     *   { buttonId: 'id1', buttonText: { displayText: 'Button 1' }, type: 1 }
+     * ]);
+     */
+    async sendButtonMessage(jid, text, buttons, options = {}) {
+        const content = typeof text === 'string'
+            ? { text, buttons, ...options }
+            : { ...text, buttons, ...options };
+
+        return await this.sendMessage(jid, {
+            buttonMessage: content
+        }, options);
+    }
+
+    /**
+     * Send list message with selectable options
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {string} buttonText - Text shown on the list button
+     * @param {Object} content - Message content
+     * @param {string} content.text - Message text
+     * @param {string} [content.title] - List title
+     * @param {string} [content.footer] - Footer text
+     * @param {Array<Object>} sections - Array of section objects with rows
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * await client.sendListMessage('628xxx@s.whatsapp.net', 'Click Here', {
+     *   text: 'Select an option',
+     *   title: 'Menu',
+     *   footer: 'Choose wisely'
+     * }, [
+     *   {
+     *     title: 'Section 1',
+     *     rows: [
+     *       { title: 'Option 1', rowId: 'id1', description: 'Description 1' },
+     *       { title: 'Option 2', rowId: 'id2', description: 'Description 2' }
+     *     ]
+     *   }
+     * ]);
+     */
+    async sendListMessage(jid, buttonText, content, sections, options = {}) {
+        return await this.sendMessage(jid, {
+            listMessage: {
+                ...content,
+                buttonText,
+                sections,
+                listType: 1
+            }
+        }, options);
+    }
+
+    /**
+     * Send template button message
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {Array<Object>} buttons - Array of template button objects
+     * @param {Object} content - Message content
+     * @param {string} content.text - Message text
+     * @param {string} [content.footer] - Footer text
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * // Quick reply buttons
+     * await client.sendTemplateButtons('628xxx@s.whatsapp.net', [
+     *   { index: 1, quickReplyButton: { displayText: 'Yes', id: 'yes' } },
+     *   { index: 2, quickReplyButton: { displayText: 'No', id: 'no' } }
+     * ], {
+     *   text: 'Do you agree?',
+     *   footer: 'Please respond'
+     * });
+     *
+     * // URL and Call buttons
+     * await client.sendTemplateButtons('628xxx@s.whatsapp.net', [
+     *   { index: 1, urlButton: { displayText: 'Visit Website', url: 'https://example.com' } },
+     *   { index: 2, callButton: { displayText: 'Call Us', phoneNumber: '+1234567890' } },
+     *   { index: 3, quickReplyButton: { displayText: 'Contact', id: 'contact' } }
+     * ], {
+     *   text: 'Get in touch with us!',
+     *   footer: 'Support Team'
+     * });
+     */
+    async sendTemplateButtons(jid, buttons, content, options = {}) {
+        return await this.sendMessage(jid, {
+            templateMessage: {
+                hydratedTemplate: {
+                    hydratedContentText: content.text,
+                    hydratedFooterText: content.footer || '',
+                    hydratedButtons: buttons
+                }
+            }
+        }, options);
+    }
+
+    /**
+     * Send interactive message (modern button format)
+     * @async
+     * @param {string} jid - WhatsApp JID (chat ID)
+     * @param {Object} content - Message content
+     * @param {Object} content.body - Body text object { text: string }
+     * @param {Object} [content.footer] - Footer text object { text: string }
+     * @param {Object} [content.header] - Header object
+     * @param {Object} interactive - Interactive content (nativeFlowMessage or buttons/list)
+     * @param {Object} [options={}] - Additional options
+     * @returns {Promise<Object>} Sent message object
+     * @example
+     * // Interactive buttons
+     * await client.sendInteractiveMessage('628xxx@s.whatsapp.net', {
+     *   body: { text: 'Choose an option' },
+     *   footer: { text: 'Powered by Bot' }
+     * }, {
+     *   buttonParamsJson: JSON.stringify({
+     *     buttons: [
+     *       { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Option 1', id: 'opt1' }) },
+     *       { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Option 2', id: 'opt2' }) }
+     *     ]
+     *   })
+     * });
+     */
+    async sendInteractiveMessage(jid, content, interactive, options = {}) {
+        return await this.sendMessage(jid, {
+            interactiveMessage: {
+                ...content,
+                nativeFlowMessage: interactive.nativeFlowMessage || {
+                    buttons: interactive.buttons || [],
+                    messageParamsJson: interactive.buttonParamsJson || ''
+                }
+            }
+        }, options);
+    }
+
+    /**
      * Helper function to unwrap view once message from various structures
      * @private
      * @param {Object} quotedMessage - The quoted message object
