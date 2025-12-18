@@ -77,7 +77,7 @@ Add `"type": "module"` to use ES modules:
     "dev": "node --watch index.js"
   },
   "dependencies": {
-    "@roidev/kachina-md": "^2.1.9"
+    "@roidev/kachina-md": "^2.4.0"
   }
 }
 ```
@@ -322,7 +322,7 @@ npm update @roidev/kachina-md
 ### Update to Specific Version
 
 ```bash
-npm install @roidev/kachina-md@2.1.9
+npm install @roidev/kachina-md@2.3.1
 ```
 
 ## Next Steps

@@ -25,7 +25,7 @@ export default defineConfig({
       { text: 'API', link: '/api/client' },
       { text: 'Examples', link: '/examples/basic-bot' },
       {
-        text: 'v2.1.9',
+        text: 'v2.x.x',
         items: [
           { text: 'Changelog', link: '/changelog' },
           { text: 'Contributing', link: '/contributing' }
