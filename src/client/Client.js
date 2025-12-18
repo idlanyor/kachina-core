@@ -10,12 +10,12 @@ import { Boom } from '@hapi/boom';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';
 import EventEmitter from 'events';
-import { serialize } from '../helpers/serialize.js';
-import { PluginHandler } from '../handlers/PluginHandler.js';
+import { serialize } from '../utils/serialize.js';
+import { PluginHandler } from '../structures/PluginHandler.js';
 import {
     createSticker,
     StickerTypes
-} from '../helpers/sticker.js';
+} from '../utils/sticker.js';
 import chalk from 'chalk';
 
 /**

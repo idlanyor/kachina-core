@@ -9,6 +9,7 @@ examples/database/
 examples/*-session/
 test-session/
 .env
+base-kachina
 
 # VitePress
 docs-site/.vitepress/dist

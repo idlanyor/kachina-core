@@ -1,6 +1,6 @@
 // Main exports
 export { Client } from './client/Client.js';
-export { PluginHandler } from './handlers/PluginHandler.js';
+export { PluginHandler } from './structures/PluginHandler.js';
 
 // Helpers
 export {
@@ -23,7 +23,7 @@ export {
     randomNumber,
     pickRandom,
     chunk
-} from './helpers/index.js';
+} from './utils/index.js';
 
 // Default export
 import { Client } from './client/Client.js';

@@ -7,12 +7,12 @@
   "type": "module",
   "scripts": {
     "build": "node build.js",
-    "test": "node examples/basic-bot.js",
+    "test": "node example/basic-bot.js",
     "prepublishOnly": "npm run build",
     "release": "bash scripts/release.sh",
-    "docs:dev": "vitepress dev docs-site --host",
-    "docs:build": "vitepress build docs-site",
-    "docs:preview": "vitepress preview docs-site"
+    "docs:dev": "vitepress dev docs --host",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "keywords": [
     "whatsapp",
@@ -36,7 +36,7 @@
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "axios": "^1.6.0",
-    "baileys": "npm:sanka-baileyss@latest",
+    "baileys": "npm:ye-bail@latest",
     "chalk": "^5.3.0",
     "file-type": "^18.7.0",
     "fs-extra": "^11.2.0",
@@ -44,7 +44,7 @@
     "node-cache": "^5.1.2",
     "pino": "^8.16.0",
     "qrcode-terminal": "^0.12.0",
-    "sharp": "^0.33.0",
+    "sharp": "^0.34.5",
     "wa-sticker-formatter": "^4.4.4"
   },
   "devDependencies": {
@@ -63,8 +63,8 @@
     "./plugins": {
       "import": "./lib/plugins/index.js"
     },
-    "./helpers": {
-      "import": "./lib/helpers/index.js"
+    "./utils": {
+      "import": "./lib/utils/index.js"
     }
   },
   "files": [
