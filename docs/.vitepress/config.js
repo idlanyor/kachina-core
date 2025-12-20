@@ -15,6 +15,8 @@ export default defineConfig({
     ['meta', { property: 'og:title', content: 'Kachina-MD | WhatsApp Bot Framework' }],
     ['meta', { property: 'og:site_name', content: 'Kachina-MD' }],
     ['meta', { property: 'og:image', content: 'https://kachina-md.dev/og-image.png' }],
+    ['meta', { name: 'google-adsense-account', content: 'ca-pub-3024635655876249' }],
+    ['script', { async: '', src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3024635655876249', crossorigin: 'anonymous' }],
   ],
 
   themeConfig: {
